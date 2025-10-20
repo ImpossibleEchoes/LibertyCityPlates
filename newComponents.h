@@ -1,0 +1,83 @@
+﻿#pragma once
+
+#include "vehExtParams.h"
+
+#include <map>
+
+extern void(__cdecl* g_pfnVehProcessControlAddon[0x10])(CVehicle*, CVehExtParams::Params*);
+extern uint8_t g_numVehProcessControlAddon;
+
+extern void(__cdecl* g_pfnVehPrerenderAddon[0x10])(CVehicle*, CVehExtParams::Params*);
+extern uint8_t g_numVehPrerenderAddon;
+
+
+enum eNewComponents : char {
+	COMPONENT_STEER,
+	COMPONENT_SPEED,
+	COMPONENT_TEMP,
+	COMPONENT_RPM,
+	COMPONENT_ENGINE,
+	COMPONENT_SUPERCHARGER_THROTTLE,
+	COMPONENT_POPUP_HEADLIGHTS,
+
+	COMPONENT_TANK_ROLL_L_FIRST,
+	COMPONENT_TANK_ROLL_1_L = COMPONENT_TANK_ROLL_L_FIRST,
+	COMPONENT_TANK_ROLL_2_L,
+	COMPONENT_TANK_ROLL_3_L,
+	COMPONENT_TANK_ROLL_4_L,
+	COMPONENT_TANK_ROLL_5_L,
+	COMPONENT_TANK_ROLL_L_LAST = COMPONENT_TANK_ROLL_5_L,
+
+	COMPONENT_TANK_ROLL_R_FIRST,
+	COMPONENT_TANK_ROLL_1_R = COMPONENT_TANK_ROLL_R_FIRST,
+	COMPONENT_TANK_ROLL_2_R,
+	COMPONENT_TANK_ROLL_3_R,
+	COMPONENT_TANK_ROLL_4_R,
+	COMPONENT_TANK_ROLL_5_R,
+	COMPONENT_TANK_ROLL_R_LAST = COMPONENT_TANK_ROLL_5_R,
+
+	COMPONENT_TANK_DRIVE_L_FIRST,
+	COMPONENT_TANK_DRIVE_1_L = COMPONENT_TANK_DRIVE_L_FIRST,
+	COMPONENT_TANK_DRIVE_2_L,
+	COMPONENT_TANK_DRIVE_L_LAST= COMPONENT_TANK_DRIVE_2_L,
+
+	COMPONENT_TANK_DRIVE_R_FIRST,
+	COMPONENT_TANK_DRIVE_1_R = COMPONENT_TANK_DRIVE_R_FIRST,
+	COMPONENT_TANK_DRIVE_2_R,
+	COMPONENT_TANK_DRIVE_R_LAST= COMPONENT_TANK_DRIVE_2_R,
+
+	COMPONENT_WEAPON_FIRST,
+	COMPONENT_WEAPON_A = COMPONENT_WEAPON_FIRST,
+	COMPONENT_WEAPON_B,
+	COMPONENT_WEAPON_C,
+	COMPONENT_WEAPON_D,
+	COMPONENT_WEAPON_E,
+	COMPONENT_WEAPON_F,
+	COMPONENT_WEAPON_G,
+	COMPONENT_WEAPON_H,
+	COMPONENT_WEAPON_I,
+	COMPONENT_WEAPON_J,
+	COMPONENT_WEAPON_LAST = COMPONENT_WEAPON_J,
+
+	COMPONENT_TURRET_1BASE,
+	COMPONENT_TURRET_1BARREL,
+	COMPONENT_TURRET_2BASE,
+	COMPONENT_TURRET_2BARREL,
+
+	NUM_COMPONENTS,
+};
+
+struct alignas(0x10) CVehStruct2 {
+	short m_aBones[NUM_COMPONENTS];
+	float m_TrackDriveWheelScale[2];
+};
+
+extern std::map<uint16_t, CVehStruct2*> g_vehStruct2;
+
+void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams);
+void __cdecl updateDashboard(CVehicle* _a, CVehExtParams::Params* pParams);
+void __cdecl prerenderDashboard(CVehicle* _a, CVehExtParams::Params* pParams);
+void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams);
+void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams, uint32_t modelId);
+
+void initNewComponents();
