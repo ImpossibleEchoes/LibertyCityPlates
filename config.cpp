@@ -24,6 +24,8 @@ bool CConfig::ms_bFixDoubleSkidmark = false;
 bool CConfig::ms_bPopupHeadlights = false;
 bool CConfig::ms_bTankComponents = false;
 bool CConfig::ms_bMoreWheels = false;
+bool CConfig::ms_bImportExportData = false;
+bool CConfig::ms_bUseFastRandom = false;
 
 void showError(const char* pszText) {
 	MessageBoxA(nullptr, pszText, "LibertyCityPlates", 0x10 | MB_TOPMOST);
@@ -68,8 +70,8 @@ bool CConfig::create() {
 
 
 	fclose(f);
-	showInfo("config created!");
-	ExitProcess(0);
+	//showInfo("config created!");
+	//ExitProcess(0);
 	return true;
 
 }
@@ -86,6 +88,8 @@ bool CConfig::create() {
 #define FIX_DOUBLE_SKIDMARK_HASH 0xE24D32BD
 #define POPUP_HEADLIGHTS 0xA0DA9272
 #define TANK_COMPONENTS 0xED7A5294
+#define IMPORT_EXPORT_DATA 0x36E59D82
+#define USE_FAST_RANDOM 0xB7F568BC
 
 int getInt(std::fstream& f) {
 	std::string tmpstr;
@@ -160,7 +164,6 @@ void CConfig::read() {
 						}
 
 					}
-
 				}
 				break;
 			}
@@ -176,61 +179,24 @@ void CConfig::read() {
 				ms_bTankComponents = getInt(f);
 				break;
 
+			case IMPORT_EXPORT_DATA:
+				ms_bImportExportData = getInt(f);
+				break;
+			case USE_FAST_RANDOM:
+				ms_bUseFastRandom = getInt(f);
+				break;
+
 			}
 		}
 	}
 	else
 		bError = true;
 
-	//int bLicensePlates;
-	//float fLicensePlates;
-	//if (fscanf(f, "LicensePlates %i\n", &bLicensePlates) == 1)
-	//	ms_bLicensePlates = bLicensePlates;
-	//else
-	//	bError = true;
-	//if (fscanf(f, "Dashboard %i\n", &bLicensePlates) == 1)
-	//	ms_bDashboard = bLicensePlates;
-	//else
-	//	bError = true;
-	//if (fscanf(f, "PatchCustomVehFX %i\n", &bLicensePlates) == 1)
-	//	ms_bPatchCustomVehFX = bLicensePlates;
-	//else
-	//	bError = true;
-
-	//if (fscanf(f, "PatchEngine %i\n", &bLicensePlates) == 1)
-	//	ms_bPatchEngine = bLicensePlates;
-	//else
-	//	bError = true;
-
-	//if (fscanf(f, "EngineComponents %i\n", &bLicensePlates) == 1)
-	//	ms_bEngineComponents = bLicensePlates;
-	//else
-	//	bError = true;
-
-	//if (fscanf(f, "BumperStrength %f\n", &fLicensePlates) == 1)
-	//	ms_fBumperStrength = fLicensePlates;
-	//else
-	//	bError = true;
-
-	//if (fscanf(f, "BumperStrengthIsMassMultiplier %i\n", &bLicensePlates) == 1)
-	//	ms_bBumperStrengthIsMassMultiplier = bLicensePlates;
-	//else
-	//	bError = true;
-
-	//if (fscanf(f, "MinBumperStrength %f\n", &fLicensePlates) == 1)
-	//	ms_fMinBumperStrength = fLicensePlates;
-	//else
-	//	bError = true;
-
-	//fclose(f);
 	f.close();
 
 	if (bError) {
-		const char* pszQuestion = "Broken config. Create new?";
-		if (showQuestion(pszQuestion))
-			create();
-		else
-			ExitProcess(0);
+		if (create())
+			read();
 	}
 
 

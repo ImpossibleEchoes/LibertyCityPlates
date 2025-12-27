@@ -1,5 +1,13 @@
 ﻿#include <math.h>
+#include <random>
+
 #include "rage_math.h"
+#include "addrs.h"
+#include "config.h"
+#include "trace.h"
+
+static std::mt19937 gen{ std::random_device{}() };
+int(__cdecl* g_pfnGetRandom)(int, int);
 
 float smoothFloat2(float current_value, float previous_smoothed_value, float delta_time, float smooth_time) {
 	if (current_value == previous_smoothed_value)
@@ -65,4 +73,40 @@ uint32_t jenkins_one_at_a_time_hash(const char* key) {
 	hash ^= hash >> 11;
 	hash += hash << 15;
 	return hash;
+}
+
+uint32_t getOrParseHash(const char* str) {
+	uint32_t hash;
+	if (strlen(str) > 5) {
+		if (!strncmp(str, "hash:", 5))
+			return atoi(str + 5);
+		else
+			return jenkins_one_at_a_time_hash(str);
+	}
+	else
+		return jenkins_one_at_a_time_hash(str);
+}
+
+// Mersenne Twister
+int __cdecl getRandom(int min, int max) {
+
+	std::uniform_int_distribution<int> dist(min, max);
+
+	return dist(gen);
+}
+
+int __cdecl getRandomFast(int min, int max) {
+	return min + ((int32_t(__cdecl*)())g_rand)() % (max - min + 1);
+}
+
+void initRandom() {
+	if (CConfig::ms_bUseFastRandom) {
+		g_pfnGetRandom = getRandomFast;
+		PRINT_DUBUG("[initRandom(...)] used getRandomFast\n");
+	}
+	else {
+		g_pfnGetRandom = getRandom;
+		PRINT_DUBUG("[initRandom(...)] used getRandom\n");
+	}
+
 }

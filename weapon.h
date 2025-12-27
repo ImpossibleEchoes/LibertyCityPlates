@@ -10,12 +10,14 @@
 struct CCarWeapInfo {
 	struct Weapon {
 		uint32_t m_weapId;
+		uint32_t m_weapNameHash;
 		uint32_t m_numBones;
 		uint32_t m_aBones[MAX_NUM_CAR_WEAPONS_BONES];
 
 		Weapon() {
 			m_weapId = -1;
 			m_numBones = 0;
+			m_weapNameHash = 0;
 		}
 	};
 	

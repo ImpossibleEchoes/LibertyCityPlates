@@ -53,7 +53,9 @@ struct CVehicleModelInfo {
 	char __0[0xc];
 	CDrawableRef* m_pDrawableRef; // +C
 	char __10[0x2C];
-	uint32_t m_hash;
+	uint32_t m_hash; // +3C
+	char __40[0x8];
+	uint16_t m_TxdId; // +48
 };
 
 extern size_t g_hookAddr_CVehicle__CVehicle; // call opcode
@@ -130,8 +132,26 @@ extern size_t g_vmtAddr_CHeli__processCannon;
 extern size_t g_vmtAddr_CPlane__processCannon;
 extern size_t g_hookAddr_pedShotBlocking;
 
+extern size_t g_hookAddr_initWreckedTexture;
+extern size_t g_rage__grmShaderGroup__setVarTexture;
+
+extern size_t g_CTxdStore__getIndexByName;
+extern size_t g_CTxdStore__addEntry;
+extern size_t g_CTxdStore__loadFile;
+extern size_t g_CTxdStore__addRef;
+extern size_t g_CTxdStore__at;
+extern size_t g_CTxdStore__release;
+extern size_t g_hookAddr_loadPlateTxd;
+extern size_t g_hookAddr_releasePlateTxd;
+extern size_t g_CTxdStore__releaseEntry;
+
+extern size_t g_hookAddr_CWorld__process;
+extern size_t g_nativeCallAddr_isGameKeyboardKeyJustPressed;
+extern size_t g_nativeCallAddr_isGameKeyboardKeyPressed;
+
 extern bool g_bIsCE;
 
 uint32_t initAddrsDynamicLegacy();
 uint32_t initAddrsDynamicCE();
+uint32_t initAddrsDynamicAll();
 void initAddrsEFLC1120();

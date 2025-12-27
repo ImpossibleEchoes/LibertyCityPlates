@@ -81,18 +81,27 @@ size_t CVehicle2::ms_processcontrol_origcall;
 
 void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams, crSkeletonData* pSkel, uint32_t modelId) {
 
-	if (!g_vehStruct2.count(modelId != 0xFFFFFFFF? modelId : _a->getModelIndex())) {
+	if (!g_vehStruct2.count((modelId != ~0) ? modelId : _a->getModelIndex())) {
 
 		CVehStruct2* pStruct = new CVehStruct2;
 
 		const char* ppszNames[NUM_COMPONENTS]{
 			"steer_mesh",
+			"steeringwheel",
 			"speed_mesh",
+			"dial_speed",
 			"temp_mesh",
+			"dial_temp",
 			"rpm_mesh",
+			"dial_rpm",
 			"engine_mesh",
+			"engineblock",
 			"supercharger_throttle_mesh",
+			"supercharger_1",
+			"supercharger_2",
+			"supercharger_3",
 			"popup_headlights",
+
 
 			"roll_l_1",
 			"roll_l_2",
@@ -154,10 +163,10 @@ void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams, crSke
 
 		pParams->setStruct(pStruct);
 
-		g_vehStruct2.insert(std::make_pair(modelId != 0xFFFFFFFF ? modelId : _a->getModelIndex(), pStruct));
+		g_vehStruct2.insert(std::make_pair((modelId != ~0) ? modelId : _a->getModelIndex(), pStruct));
 	}
 	else {
-		auto p = g_vehStruct2[modelId != 0xFFFFFFFF ? modelId : _a->getModelIndex()];
+		auto p = g_vehStruct2[(modelId != ~0) ? modelId : _a->getModelIndex()];
 		pParams->setStruct(p);
 	}
 
@@ -176,15 +185,15 @@ void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams, uint3
 
 void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams) {
 	auto pSkel = ((crSkeletonData * (__thiscall*)(CVehicle * _a))(g_CDynamicEntity__getSkeletonData))(_a);
-	checkVehStruct2(_a, pParams, pSkel, 0xFFFFFFFF);
+	checkVehStruct2(_a, pParams, pSkel, ~0);
 }
 
-
-int g_components[3]{
-	COMPONENT_RPM,
-	COMPONENT_SPEED,
-	COMPONENT_TEMP
-};
+//
+//int g_components[3]{
+//	COMPONENT_RPM,
+//	COMPONENT_SPEED,
+//	COMPONENT_TEMP
+//};
 
 const float DASHBOARD_SMOOTH_TIME = 0.2f;
 
@@ -229,31 +238,20 @@ void __cdecl updateDashboard(CVehicle* _a, CVehExtParams::Params* pParams) {
 
 }
 
+
 void __cdecl prerenderDashboard(CVehicle* _a, CVehExtParams::Params* pParams) {
 	auto pStruct = pParams->getStruct();
 	auto pSkel = ((crSkeletonData * (__thiscall*)(CVehicle * _a))(g_CDynamicEntity__getSkeletonData))(_a);
-	for (size_t i = 0; i < 3; i++) {
-		if (pStruct->m_aBones[g_components[i]] != -1) {
-			auto index = pStruct->m_aBones[g_components[i]];
+
+	for (size_t i = COMPONENT_RPM_FIRST; i <= COMPONENT_RPM_LAST; i++) {
+		if (pStruct->m_aBones[i] != -1) {
+			auto index = pStruct->m_aBones[i];
 			auto pBone = pSkel->m_pBones + index;
 
 
 			auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
 
-			float val = 0;
-
-			switch (i) {
-			case 0:
-				val = pParams->getRpmArrow();
-				break;
-			case 1:
-
-				val = pParams->getSpeedArrow();
-				break;
-			case 2:
-				val = pParams->getTempArrow();
-				break;
-			}
+			float val = pParams->getRpmArrow();
 
 			float rot = val;
 			rot *= pBone->m_vRotMin.z;
@@ -274,60 +272,127 @@ void __cdecl prerenderDashboard(CVehicle* _a, CVehExtParams::Params* pParams) {
 
 			pMtx->fromQuaternion(quat3);
 
-
 		}
 	}
-	if (pStruct->m_aBones[COMPONENT_STEER] != -1) {
-		auto index = pStruct->m_aBones[COMPONENT_STEER];
-		auto pBone = pSkel->m_pBones + index;
+
+	for (size_t i = COMPONENT_SPEED_FIRST; i <= COMPONENT_SPEED_LAST; i++) {
+		if (pStruct->m_aBones[i] != -1) {
+			auto index = pStruct->m_aBones[i];
+			auto pBone = pSkel->m_pBones + index;
 
 
-		auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
+			auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
 
-		uint32_t numWheels = g_pfnGetVehNumWheels(_a);
-		CWheel* pWheels = g_pfnGetVehWheels(_a);
+			float val = pParams->getSpeedArrow();
 
-		float val = 0;
-		if (numWheels != 0) {
-			for (uint8_t i = 0; i < numWheels; i++) {
-				CWheel* wheel = pWheels + i;
-				if (wheel->m_bFrontWheelSteer)
-					val = wheel->m_fRotationZ > 0.f ? -wheel->m_fRotationZ : -wheel->m_fRotationZ * 1.33333334f;
-				else if (wheel->m_bRearWheelSteer)
-					val = wheel->m_fRotationZ < 0.f ? wheel->m_fRotationZ : wheel->m_fRotationZ * 1.33333334f;
-				else continue;
-				auto pHandling = g_pfnGetHandlingData(_a);
-				
-				/*
-				
-				Seriously?! i can't believe that bugged line was active for almost two years... \
-				it's been in five different scripts 'cuz i just kept grabbing the core steering feature code and pasting it everywhere. Ugh
-				
-				wheel->m_fRotationZ /= pHandling->m_fSteeringLock; 
-				
-				*/
-
-				val /= pHandling->m_fSteeringLock;
-				break;
+			float rot = val;
+			rot *= pBone->m_vRotMin.z;
+			if (pBone->m_vRotMin.x != 0.f) {
+				rot -= pBone->m_vRotMin.x;
+				rot = max(rot, 0);
 			}
+			rot = min(pBone->m_vRotMin.y, rot);
+
+			Quaternion quat;
+			Vector3 axisVec{ 0,1,0,0 };
+			quat.fromAxisAngle(axisVec, rot);
+
+			Quaternion quat2;
+			quat2 = pSkel->m_pBones[index].m_vRotationQuaternion;
+
+			Quaternion quat3 = quat2 * quat;
+
+			pMtx->fromQuaternion(quat3);
+
 		}
-
-
-		float rot = val * pBone->m_vRotMin.x;
-
-		Quaternion quat;
-		Vector3 axisVec{ 0,1,0,0 };
-		quat.fromAxisAngle(axisVec, rot);
-
-		Quaternion quat2;
-		quat2 = pSkel->m_pBones[index].m_vRotationQuaternion;
-
-		Quaternion quat3 = quat2 * quat;
-
-		pMtx->fromQuaternion(quat3);
-
-
 	}
+
+	for (size_t i = COMPONENT_TEMP_FIRST; i <= COMPONENT_TEMP_LAST; i++) {
+		if (pStruct->m_aBones[i] != -1) {
+			auto index = pStruct->m_aBones[i];
+			auto pBone = pSkel->m_pBones + index;
+
+
+			auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
+
+			float val = pParams->getTempArrow();
+
+			float rot = val;
+			rot *= pBone->m_vRotMin.z;
+			if (pBone->m_vRotMin.x != 0.f) {
+				rot -= pBone->m_vRotMin.x;
+				rot = max(rot, 0);
+			}
+			rot = min(pBone->m_vRotMin.y, rot);
+
+			Quaternion quat;
+			Vector3 axisVec{ 0,1,0,0 };
+			quat.fromAxisAngle(axisVec, rot);
+
+			Quaternion quat2;
+			quat2 = pSkel->m_pBones[index].m_vRotationQuaternion;
+
+			Quaternion quat3 = quat2 * quat;
+
+			pMtx->fromQuaternion(quat3);
+
+		}
+	}
+
+	for (size_t i = COMPONENT_STEER_FIRST; i <= COMPONENT_STEER_LAST; i++) {
+		if (pStruct->m_aBones[i] != -1) {
+			auto index = pStruct->m_aBones[i];
+			auto pBone = pSkel->m_pBones + index;
+
+
+			auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
+
+			uint32_t numWheels = g_pfnGetVehNumWheels(_a);
+			CWheel* pWheels = g_pfnGetVehWheels(_a);
+
+			float val = 0;
+			if (numWheels != 0) {
+				for (uint8_t i = 0; i < numWheels; i++) {
+					CWheel* wheel = pWheels + i;
+					if (wheel->m_bFrontWheelSteer)
+						val = wheel->m_fRotationZ > 0.f ? -wheel->m_fRotationZ : -wheel->m_fRotationZ * 1.33333334f;
+					else if (wheel->m_bRearWheelSteer)
+						val = wheel->m_fRotationZ < 0.f ? wheel->m_fRotationZ : wheel->m_fRotationZ * 1.33333334f;
+					else continue;
+					auto pHandling = g_pfnGetHandlingData(_a);
+
+					/*
+
+					Seriously?! i can't believe that bugged line was active for almost two years... \
+					it's been in five different scripts 'cuz i just kept grabbing the core steering feature code and pasting it everywhere. Ugh
+
+					wheel->m_fRotationZ /= pHandling->m_fSteeringLock;
+
+					*/
+
+					val /= pHandling->m_fSteeringLock;
+					break;
+				}
+			}
+
+
+			float rot = val * pBone->m_vRotMin.x;
+
+			Quaternion quat;
+			Vector3 axisVec{ 0,1,0,0 };
+			quat.fromAxisAngle(axisVec, rot);
+
+			Quaternion quat2;
+			quat2 = pSkel->m_pBones[index].m_vRotationQuaternion;
+
+			Quaternion quat3 = quat2 * quat;
+
+			pMtx->fromQuaternion(quat3);
+
+		}
+	}
+
+
 }
 
 // попы
@@ -399,50 +464,52 @@ void __cdecl updateEngineComponents(CVehicle* _a, CVehExtParams::Params* pParams
 
 void __cdecl prerenderEngineComponents(CVehicle* _a, CVehExtParams::Params* pParams) {
 	auto pStruct = pParams->getStruct();
-	int index = pStruct->m_aBones[COMPONENT_ENGINE];
-	if (index > 0) {
+	auto pSkel = ((crSkeletonData * (__thiscall*)(CVehicle * _a))(g_CDynamicEntity__getSkeletonData))(_a);
+	for (size_t i = COMPONENT_ENGINE_FIRST; i <= COMPONENT_ENGINE_LAST; i++) {
+		if (pStruct->m_aBones[i] != -1) {
+			auto index = pStruct->m_aBones[i];
+			auto pBone = pSkel->m_pBones + index;
 
-		auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
+			auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
 
-		float rot = pParams->getEngineRot();
+			float rot = pParams->getEngineRot();
 
-		rot += RAGE_PI;
-		rot *= 0.5f;
+			rot += RAGE_PI;
+			rot *= 0.5f;
 
-		rot = sinf(rot);
+			rot = sinf(rot);
 
-		float rpm = g_pfnGetVehRpm(_a);
-		rot *= rpm * rpm;
+			float rpm = g_pfnGetVehRpm(_a);
+			rot *= rpm * rpm;
 
-		auto pSkel = ((crSkeletonData * (__thiscall*)(CVehicle * _a))(g_CDynamicEntity__getSkeletonData))(_a);
-		auto pBone = pSkel->m_pBones + index;
+			rot *= pBone->m_vRotMin.x;
+			Quaternion q;
+			Vector3 vec{ 0,1,0,0 };
+			q.fromAxisAngle(vec, rot);
 
-		rot *= pBone->m_vRotMin.x;
-		Quaternion q;
-		Vector3 vec{ 0,1,0,0 };
-		q.fromAxisAngle(vec, rot);
-
-		pMtx->fromQuaternion(q);
+			pMtx->fromQuaternion(q);
+		}
 	}
 
-	index = pParams->getStruct()->m_aBones[COMPONENT_SUPERCHARGER_THROTTLE];
-	if (index > 0) {
+	for (size_t i = COMPONENT_SUPERCHARGER_THROTTLE_FIRST; i <= COMPONENT_SUPERCHARGER_THROTTLE_LAST; i++) {
+		if (pStruct->m_aBones[i] != -1) {
+			auto index = pStruct->m_aBones[i];
+			auto pBone = pSkel->m_pBones + index;
 
-		auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
+			auto pMtx = ((Matrix34 * (__thiscall*)(CVehicle * _a, int))(g_CDynamicEntity__getLocalMatrix))(_a, index);
 
+			float rot = pParams->getSuperchargerThrottleRot();
 
-		auto pSkel = ((crSkeletonData * (__thiscall*)(CVehicle * _a))(g_CDynamicEntity__getSkeletonData))(_a);
-		auto pBone = pSkel->m_pBones + index;
+			rot *= pBone->m_vRotMin.x;
+			Quaternion q;
+			Vector3 vec{ 1,0,0,0 };
+			q.fromAxisAngle(vec, rot);
 
-		float rot = pParams->getSuperchargerThrottleRot();
-
-		rot *= pBone->m_vRotMin.x;
-		Quaternion q;
-		Vector3 vec{ 1,0,0,0 };
-		q.fromAxisAngle(vec, rot);
-
-		pMtx->fromQuaternion(q);
+			pMtx->fromQuaternion(q);
+		}
 	}
+
+
 }
 
 void initNewComponents() {

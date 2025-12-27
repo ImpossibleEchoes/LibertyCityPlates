@@ -85,6 +85,22 @@ size_t g_vmtAddr_CHeli__processCannon;
 size_t g_vmtAddr_CPlane__processCannon;
 size_t g_hookAddr_pedShotBlocking;
 
+size_t g_hookAddr_initWreckedTexture;
+size_t g_rage__grmShaderGroup__setVarTexture;
+size_t g_CTxdStore__getIndexByName;
+size_t g_CTxdStore__addEntry;
+size_t g_CTxdStore__loadFile;
+size_t g_CTxdStore__addRef;
+size_t g_CTxdStore__at;
+size_t g_CTxdStore__release;
+size_t g_hookAddr_loadPlateTxd;
+size_t g_hookAddr_releasePlateTxd;
+size_t g_CTxdStore__releaseEntry;
+
+size_t g_hookAddr_CWorld__process;
+size_t g_nativeCallAddr_isGameKeyboardKeyJustPressed;
+size_t g_nativeCallAddr_isGameKeyboardKeyPressed;
+
 // конец
 CHandlingVehicle* g_handling;
 
@@ -93,9 +109,9 @@ bool g_bIsCE = false;
 size_t findPattern(const char* pszPattern, ptrdiff_t offset = 0) {
 	size_t found_address = 0;
 //#ifdef _DEBUG
-	hook::pattern g = hook::pattern(pszPattern); // .count(1);
+//	hook::pattern g = hook::pattern(pszPattern); // .count(1);
 //#else
-//	hook::pattern g = hook::pattern(pszPattern).count(1);
+	hook::pattern g = hook::pattern(pszPattern).count(1);
 //#endif
 	if (!g.empty())
 		found_address = reinterpret_cast<size_t>(g.get(0).get<void>(offset));
@@ -103,6 +119,28 @@ size_t findPattern(const char* pszPattern, ptrdiff_t offset = 0) {
 
 
 	return found_address;
+}
+
+uint32_t initAddrsDynamicAll() {
+	uint32_t result = 0;
+	
+	g_hookAddr_CWorld__process = findPattern("E8 ? ? ? ? E8 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? 83 3D ? ? ? ? ? 74 05 E8 ? ? ? ? ");
+	if (!g_hookAddr_CWorld__process)
+		result |= 1;
+
+	g_nativeCallAddr_isGameKeyboardKeyJustPressed = findPattern("68 ? ? ? ? 68 7D 12 0D 54 E8 ? ? ? ? ");
+	if (!g_nativeCallAddr_isGameKeyboardKeyJustPressed)
+		result |= 1;
+	else
+		g_nativeCallAddr_isGameKeyboardKeyJustPressed = *(size_t*)(g_nativeCallAddr_isGameKeyboardKeyJustPressed + 1);
+
+	g_nativeCallAddr_isGameKeyboardKeyPressed = findPattern("68 ? ? ? ? 68 62 62 A9 5F E8 ? ? ? ? ");
+	if (!g_nativeCallAddr_isGameKeyboardKeyPressed)
+		result |= 1;
+	else
+		g_nativeCallAddr_isGameKeyboardKeyPressed = *(size_t*)(g_nativeCallAddr_isGameKeyboardKeyPressed + 1);
+
+	return result;
 }
 
 // ToDo: add CVehicle::setBoneRotation addr
@@ -440,6 +478,56 @@ uint32_t initAddrsDynamicLegacy() {
 	if (!g_hookAddr_pedShotBlocking)
 		result |= 1 << 30;
 
+
+	g_hookAddr_initWreckedTexture = findPattern("E8 ? ? ? ? 83 C4 0C 50 8B CE E8 ? ? ? ? A3 ? ? ? ? B0 01 5E C3 ", 0xB);
+	if (!g_hookAddr_initWreckedTexture)
+		result |= 1 << 30;
+
+	g_rage__grmShaderGroup__setVarTexture = findPattern("53 56 57 8B F9 0F B7 5F 0C 33 F6 85 DB 7E 33 55 8B 6C 24 18 ");
+	if (!g_rage__grmShaderGroup__setVarTexture)
+		result |= 1 << 30;
+
+	g_CTxdStore__getIndexByName = findPattern("E8 ? ? ? ? 8B E8 83 C4 04 83 FD FF 75 0F 68 ? ? ? ? E8 ? ? ? ? 83 C4 04 ");
+	if (g_CTxdStore__getIndexByName) {
+		g_CTxdStore__addEntry = getFnAddrInCallOpcode(g_CTxdStore__getIndexByName + 0x14);
+		g_CTxdStore__getIndexByName = getFnAddrInCallOpcode(g_CTxdStore__getIndexByName);
+	}
+	else
+		result |= 1 << 30;
+
+	g_CTxdStore__loadFile = findPattern("E8 ? ? ? ? 83 C4 08 8B 15 ? ? ? ? 52 E8 ? ? ? ? A1 ? ? ? ? ");
+	if (g_CTxdStore__loadFile) {
+		g_CTxdStore__addRef = getFnAddrInCallOpcode(g_CTxdStore__loadFile + 0xF);
+		g_CTxdStore__loadFile = getFnAddrInCallOpcode(g_CTxdStore__loadFile);
+	}
+	else
+		result |= 1 << 30;
+
+	g_CTxdStore__at = findPattern("8B 44 24 04 56 50 C7 05 ? ? ? ? ? ? ? ? E8 ? ? ? ? 6A 00 68 ? ? ? ? 8B F0 ", 0x10);
+	if (g_CTxdStore__at)
+		g_CTxdStore__at = getFnAddrInCallOpcode(g_CTxdStore__at);
+	else
+		result |= 1 << 30;
+
+	g_CTxdStore__release = findPattern("E8 ? ? ? ? 83 C4 04 68 ? ? ? ? E8 ? ? ? ? 50 E8 ? ? ? ? 83 C4 08 5E C3 ", 0x13);
+	if (g_CTxdStore__release)
+		g_CTxdStore__release = getFnAddrInCallOpcode(g_CTxdStore__release);
+	else
+		result |= 1 << 30;
+
+	g_hookAddr_loadPlateTxd = findPattern("E8 ? ? ? ? 6A 1C E8 ? ? ? ? 83 C4 0C 85 C0 74 19 68 ? ? ? ? 68 ? ? ? ? ");
+	if (!g_hookAddr_loadPlateTxd)
+		result |= 1 << 30;
+
+	g_hookAddr_releasePlateTxd = findPattern("E8 ? ? ? ? 8B 0D ? ? ? ? 85 C9 8B F1 74 0E E8 ? ? ? ? 56 E8 ? ? ? ? 83 C4 04 68");
+	if (!g_hookAddr_releasePlateTxd)
+		result |= 1 << 30;
+
+	g_CTxdStore__releaseEntry = findPattern("E8 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 8B F8 A0 ? ? ? ? 83 C4 14");
+	if (g_CTxdStore__releaseEntry)
+		g_CTxdStore__releaseEntry = getFnAddrInCallOpcode(g_CTxdStore__releaseEntry);
+	else
+		result |= 1 << 30;
 
 
 	return result;
@@ -831,6 +919,57 @@ uint32_t initAddrsDynamicCE() {
 	if (!g_hookAddr_pedShotBlocking)
 		result |= 1 << 30;
 
+
+
+	g_hookAddr_initWreckedTexture = findPattern("E8 ? ? ? ? 83 C4 0C 8B CE 50 E8 ? ? ? ? A3 ? ? ? ? B0 01 ", 0xB);
+	if (!g_hookAddr_initWreckedTexture)
+		result |= 1 << 30;
+
+	g_rage__grmShaderGroup__setVarTexture = findPattern("53 56 57 8B F9 33 F6 0F B7 5F 0C 85 DB 7E 3C 8B 44 24 10 55 8D 2C C5 ? ? ? ? EB 03 ");
+	if (!g_rage__grmShaderGroup__setVarTexture)
+		result |= 1 << 30;
+
+	g_CTxdStore__getIndexByName = findPattern("E8 ? ? ? ? 8B F8 83 C4 04 83 FF FF 75 0F 68 ? ? ? ? E8 ? ? ? ? 83 C4 04 8B F8 8D 84 24 ? ? ? ? ");
+	if (g_CTxdStore__getIndexByName) {
+		g_CTxdStore__addEntry = getFnAddrInCallOpcode(g_CTxdStore__getIndexByName + 0x14);
+		g_CTxdStore__getIndexByName = getFnAddrInCallOpcode(g_CTxdStore__getIndexByName);
+	}
+	else
+		result |= 1 << 30;
+
+	g_CTxdStore__loadFile = findPattern("E8 ? ? ? ? 83 C4 08 FF 35 ? ? ? ? E8 ? ? ? ? FF 35 ? ? ? ? E8 ? ? ? ? E8 ? ? ? ? 6A 1C ");
+	if (g_CTxdStore__loadFile) {
+		g_CTxdStore__addRef = getFnAddrInCallOpcode(g_CTxdStore__loadFile + 0xE);
+		g_CTxdStore__loadFile = getFnAddrInCallOpcode(g_CTxdStore__loadFile);
+	}
+	else
+		result |= 1 << 30;
+
+	g_CTxdStore__at = findPattern("56 FF 74 24 08 C7 05 ? ? ? ? ? ? ? ? E8 ? ? ? ? 6A 00 68 ? ? ? ? ", 0xF);
+	if (g_CTxdStore__at)
+		g_CTxdStore__at = getFnAddrInCallOpcode(g_CTxdStore__at);
+	else
+		result |= 1 << 30;
+
+	g_CTxdStore__release = findPattern("E8 ? ? ? ? 83 C4 04 68 ? ? ? ? E8 ? ? ? ? 50 E8 ? ? ? ? 83 C4 08 5E C3 ", 0x13);
+	if (g_CTxdStore__release)
+		g_CTxdStore__release = getFnAddrInCallOpcode(g_CTxdStore__release);
+	else
+		result |= 1 << 30;
+
+	g_hookAddr_loadPlateTxd = findPattern("E8 ? ? ? ? 6A 1C E8 ? ? ? ? 83 C4 0C 85 C0 74 19 68 ? ? ? ? 68 ? ? ? ? 6A 32 8B C8 ");
+	if (!g_hookAddr_loadPlateTxd)
+		result |= 1 << 30;
+
+	g_hookAddr_releasePlateTxd = findPattern("E8 ? ? ? ? 8B 35 ? ? ? ? 85 F6 74 10 8B CE E8 ? ? ? ? 56 E8 ? ? ? ? 83 C4 04 68 ? ? ? ? ");
+	if (!g_hookAddr_releasePlateTxd)
+		result |= 1 << 30;
+
+	g_CTxdStore__releaseEntry = findPattern("E8 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 8A 0D ? ? ? ? 83 C4 14 8B E8 80 F9 72 0F 84 ? ? ? ? 80 F9 6A ");
+	if (g_CTxdStore__releaseEntry)
+		g_CTxdStore__releaseEntry = getFnAddrInCallOpcode(g_CTxdStore__releaseEntry);
+	else
+		result |= 1 << 30;
 
 	return result;
 }

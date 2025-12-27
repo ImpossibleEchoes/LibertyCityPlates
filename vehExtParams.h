@@ -27,6 +27,16 @@ public:
 		float m_TrackDriveWheelRot[2];
 	};
 
+	struct CPlateInfo {
+		Vector4 m_vecPlateTextTint; // align to 0x10
+		Vector4 m_vecLettersScaleAndOffset; // xy = scale, zw - offset
+		uint8_t m_aLicensePlateText[12];
+		uint8_t m_NumChars;
+		uint8_t m_PlateTexIndex; // if m_nbPlateTexIndex lt g_nbPlateTexCount then m_nbPlateTexIndex = g_nbPlateTexCount - 1
+		uint8_t m_LettersTexIndex; //
+
+	};
+
 	struct CVehicleWeapon {
 		struct Slot {
 			CWeapon* m_pWeapon;
@@ -94,7 +104,7 @@ public:
 		}
 
 
-		static size_t ms_charsOffset;
+		//static size_t ms_charsOffset; // Now it in CPlateInfo
 		static size_t ms_structOffset;
 		static size_t ms_size;
 		static size_t ms_speedArrowOffset;
@@ -106,12 +116,13 @@ public:
 		static size_t ms_moreWheelsOffset;
 		static size_t ms_useTankSkidmarkOffset;
 		static size_t ms_vehWeapOffset;
+		static size_t ms_plateInfoOffset;
 
 
-		__forceinline uint8_t* getPlateChars() {
-			CHECK_ADDR(ms_charsOffset);
-			return getAddr<uint8_t>(ms_charsOffset);
-		}
+		//__forceinline uint8_t* getPlateChars() {
+		//	CHECK_ADDR(ms_charsOffset);
+		//	return getAddr<uint8_t>(ms_charsOffset);
+		//}
 
 		__forceinline CVehStruct2* getStruct() {
 			CHECK_ADDR(ms_structOffset);
@@ -199,6 +210,11 @@ public:
 			return getAddr<CVehicleWeapon>(ms_vehWeapOffset);
 		}
 
+		__forceinline CPlateInfo* getPlateInfo() {
+			CHECK_ADDR(ms_plateInfoOffset);
+			return getAddr<CPlateInfo>(ms_plateInfoOffset);
+		}
+
 		void destroy() {
 			if (ms_vehWeapOffset != -1) {
 				auto pWeap = getCarWeapInfoInfo();
@@ -248,10 +264,11 @@ extern void(__cdecl* g_pfnVehFactoryAddon[0x10])(CVehicle*, CVehExtParams::Param
 extern uint8_t g_numVehFactoryAddon;
 
 
-struct grcTexturePC;
+struct grcTexture;
 struct grmShaderGroup;
 
 void rage__grmShaderGroup__setVarVector4(grmShaderGroup* pShaderGroup, int32_t groupIndex, float* pVec);
+void rage__grmShaderGroup__setVarTexture(grmShaderGroup* pShaderGroup, int32_t groupIndex, grcTexture* pTxd);
 uint32_t rage__grmShaderGroup__addShaderGroupVar(grmShaderGroup* pShaderGroup, const char* pszName, bool bRequired);
 
 struct __declspec(align(4)) CCustomShaderEffectVehicleFX {
@@ -296,7 +313,7 @@ struct __declspec(align(4)) CCustomShaderEffectVehicleFX {
 	int8_t field_CC;
 	int8_t m_bSwitchOn;
 	float m_dBoundRadius;
-	grcTexturePC* m_pDamageTexture;
+	grcTexture* m_pDamageTexture;
 	int8_t m_nLivery;
 	uint32_t field_DC;
 	int16_t field_E0;
@@ -330,7 +347,7 @@ struct __declspec(align(4)) CCustomShaderEffectVehicleFX {
 		int32_t m_nLetters0123Index; // +4
 		int32_t m_nLetters4567Index; // +8
 		int32_t m_nLetters891011Index; // +C
-
+ 
 		float m_fTrack[2]; // +10
 		int32_t m_nTrack2Index; // +18
 		int32_t m_nTrackIndex; // +1C
@@ -338,6 +355,32 @@ struct __declspec(align(4)) CCustomShaderEffectVehicleFX {
 		alignas(0x10) float m_aLetters0123[4]; // +20
 		float m_aLetters4567[4]; // +30
 		float m_aLetters891011[4]; // +40
+
+		int32_t m_nLicensePlateValuesIndex; // +50
+		int32_t m_nLettersScaleIndex; // +54
+		int32_t m_nLettersOffsetIndex; // +58
+		int32_t m_nPlateTxdId; // +5C
+		int32_t m_nLettersTxdId; // +60
+		int32_t m_nLettersTintIndex; // +64
+
+		int32_t m_nLettersTxdDifIndex; // +68
+		int32_t m_nLettersTxdNrmIndex; // +6C
+
+		grcTexture *m_pPlate_d;
+		grcTexture *m_pPlate_n;
+		grcTexture *m_pPlate_s;
+		grcTexture *m_pLetters_d;
+		grcTexture *m_pLetters_n;
+
+		alignas(0x10) float m_aLicensePlateValues[4]; // +70
+		float m_aLettersScale[4]; // +80
+		float m_aLettersOffset[4]; // +90
+		float m_aLettersTint[4]; // +A0
+
+		int32_t m_nPlateTxdDifIndex; // +B0
+		int32_t m_nPlateTxdNrmIndex; // +B4
+		int32_t m_nPlateTxdSpecIndex; // +B8
+
 	};
 
 	__forceinline CAddonVars* getAddonVars() { return (CAddonVars*)((uint8_t*)this + m_wSize - sizeof CAddonVars); }
@@ -367,21 +410,13 @@ extern uint8_t g_numCustomVehFxAddons;
 
 struct native_obj;
 
-class vehicleScript {
-
 	// new commands:
 // SET_CAR_LICENSE_PLATE_TEXT_0123 = 0x09ded943
 // SET_CAR_LICENSE_PLATE_TEXT_4567 = 0x09de9587
 // SET_CAR_LICENSE_PLATE_TEXT_891011 = 0x0e515a91
 
-	static int32_t __cdecl setCarLicensePlateText0123(int32_t vehHandle, uint8_t char0, uint8_t char1, uint8_t char2, uint8_t char3);
-	static int32_t __cdecl setCarLicensePlateText4567(int32_t vehHandle, uint8_t char0, uint8_t char1, uint8_t char2, uint8_t char3);
-	static int32_t __cdecl setCarLicensePlateText891011(int32_t vehHandle, uint8_t char0, uint8_t char1, uint8_t char2, uint8_t char3);
-	static int32_t __cdecl n_nullCall(native_obj* _a);
-	static int32_t __cdecl n_setCarLicensePlateText0123(native_obj* _a);
-	static int32_t __cdecl n_setCarLicensePlateText4567(native_obj* _a);
-	static int32_t __cdecl n_setCarLicensePlateText891011(native_obj* _a);
 
+class vehicleScript {
 
 private:
 

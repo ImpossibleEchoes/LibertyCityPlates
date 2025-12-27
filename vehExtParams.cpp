@@ -18,7 +18,7 @@
 
 CVehExtParams g_extVehParams;
 
-size_t CVehExtParams::Params::ms_charsOffset = -1;
+//size_t CVehExtParams::Params::ms_charsOffset = -1;
 size_t CVehExtParams::Params::ms_structOffset = -1;
 size_t CVehExtParams::Params::ms_size = 0;
 size_t CVehExtParams::Params::ms_speedArrowOffset = -1;
@@ -30,6 +30,7 @@ size_t CVehExtParams::Params::ms_tankTrackParamsOffset = -1;
 size_t CVehExtParams::Params::ms_moreWheelsOffset = -1;
 size_t CVehExtParams::Params::ms_useTankSkidmarkOffset = -1;
 size_t CVehExtParams::Params::ms_vehWeapOffset = -1;
+size_t CVehExtParams::Params::ms_plateInfoOffset = -1;
 
 
 // массив для них
@@ -39,6 +40,8 @@ uint8_t g_numVehFactoryAddon = 0;
 uint32_t g_modelId = 0xFFFFFFFF;
 
 CVehicle* CVehicleFactory::createVehicle(uint32_t dwModel, uint32_t createdBy, void* pMtx, BOOL bNetwork) {
+	if (dwModel == g_modelId)
+		MessageBoxA(nullptr, "dwModel == g_modelId", nullptr, 0x10);
 	g_modelId = dwModel;
 	auto pVeh = ((CVehicle * (__thiscall*)(CVehicleFactory*, uint32_t, uint32_t, void*, BOOL))ms_createVehicle_origcall)(this, dwModel, createdBy, pMtx, bNetwork);
 
@@ -78,11 +81,9 @@ void __cdecl destroyVehicle_hook(CVehicle* a1) {
 void CVehicleFactory::init() {
 
 	//g_pfnVehFactoryAddon[g_numVehFactoryAddon++] = checkVehStruct2;
-	if(CConfig::ms_bLicensePlates)
-		g_pfnVehFactoryAddon[g_numVehFactoryAddon++] = setStandartLicensePlate;
 
-	if(g_numVehFactoryAddon)
-		ms_createVehicle_origcall = writeDWORD(g_vmtAddr__CVehicleFactoryNY__createVehicle, getThisCallAddr(&createVehicle));
+	//if(g_numVehFactoryAddon)
+	ms_createVehicle_origcall = writeDWORD(g_vmtAddr__CVehicleFactoryNY__createVehicle, getThisCallAddr(&createVehicle));
 
 	g_destroyVehicle_origcall = setFnAddrInCallOpcode(g_hookAddr_CVehicle__destructor, (size_t)destroyVehicle_hook);
 }
@@ -213,11 +214,11 @@ void CVehExtParams::init() {
 	PRINT_DUBUG("struct %s {\n", "CVehExtParams::Params");
 
 	// ToDo: add align
-	if (CConfig::ms_bLicensePlates) {
-		Params::ms_charsOffset = Params::ms_size;
-		Params::ms_size += 12;
-		PRINT_DUBUG("\t%s; // +%X\n", "uint8_t m_chars[12]", Params::ms_charsOffset);
-	}
+	//if (CConfig::ms_bLicensePlates) {
+	//	Params::ms_charsOffset = Params::ms_size;
+	//	Params::ms_size += 12;
+	//	PRINT_DUBUG("\t%s; // +%X\n", "uint8_t m_chars[12]", Params::ms_charsOffset);
+	//}
 	Params::ms_structOffset = Params::ms_size;
 	Params::ms_size += sizeof size_t;
 	PRINT_DUBUG("\t%s; // +%X\n", "CVehStruct2* m_pStruct", Params::ms_structOffset);
@@ -281,6 +282,11 @@ void CVehExtParams::init() {
 		
 	}
 	
+	if (CConfig::ms_bLicensePlates) {
+		Params::ms_plateInfoOffset = Params::ms_size;
+		Params::ms_size += sizeof CPlateInfo;
+		PRINT_DUBUG("\t%s; // +%X\n", "CPlateInfo m_PlateInfo", Params::ms_plateInfoOffset);
+	}
 
 	PRINT_DUBUG("};\n");
 
@@ -356,15 +362,8 @@ void CCustomShaderEffectVehicleFX::initHooks() {
 		return;
 
 
-	if (CConfig::ms_bLicensePlates) {
-		g_customVehFxAddons[g_numCustomVehFxAddons].m_pfnInit = initLicensePlates;
-		g_customVehFxAddons[g_numCustomVehFxAddons].m_pfnSetVars = setVarsLicensePlates;
-		g_customVehFxAddons[g_numCustomVehFxAddons].m_pfnUpdate = updateLicensePlates;
-		g_numCustomVehFxAddons++;
-	}
-
-	if (!g_numCustomVehFxAddons)
-		return;
+	//if (!g_numCustomVehFxAddons)
+	//	return;
 
 	ms_updateOrigcall = writeDWORD(g_vmtAddr__CCustomShaderEffectVehicleFX__update, getThisCallAddr(&update));
 	ms_initOrigcall = writeDWORD(g_vmtAddr__CCustomShaderEffectVehicleFX__init, getThisCallAddr(&init));
@@ -397,105 +396,119 @@ struct native_obj {
 // SET_CAR_LICENSE_PLATE_TEXT_4567 = 0x09de9587
 // SET_CAR_LICENSE_PLATE_TEXT_891011 = 0x0e515a91
 
+// SET_CAR_LICENSE_PLATE_TEXT_TINT_UBYTE4 = 0x1BC06350
+// SET_CAR_LICENSE_PLATE_TEXT_TINT_FLOAT4 = 0x3FFFB335
+// SET_CAR_LICENSE_PLATE_TEXT_LENGTH = 0x46F3540C
+// SET_CAR_LICENSE_PLATE_TEXT_TEXTURE = 0xF055490B
+// SET_CAR_LICENSE_PLATE_PLATE_TEXTURE = 0xC621B628
+// SET_CAR_LICENSE_PLATE_TEXT_SCALE = 0x6C688F74
+// SET_CAR_LICENSE_PLATE_TEXT_OFFSET = 0x04C26575
 
-int __cdecl vehicleScript::setCarLicensePlateText0123(int32_t vehHandle, uint8_t char0, uint8_t char1, uint8_t char2, uint8_t char3) {
-	vehHandle = ((atPool<CVehicle>*)(*g_pCVehicle__ms_pPool))->indexOfHandle(vehHandle);
-	if (vehHandle < g_extVehParams.m_size) {
-		auto params = g_extVehParams.getByIndex(vehHandle);
 
-		auto pChars = params->getPlateChars();
 
-		//PRINT_DUBUG("%i before:", vehHandle);
-		//for (size_t i = 0; i < 8; i++)
-		//	PRINT_DUBUG(" %i", pChars[i]);
-		//PRINT_DUBUG("\n");
-
-		pChars[0] = char0;
-		pChars[1] = char1;
-		pChars[2] = char2;
-		pChars[3] = char3;
-
-		return TRUE;
-	}
-	else 
-		PRINT_DUBUG("SET_CAR_LICENSE_PLATE_TEXT_0123: veh handle %i out of bounds\n", vehHandle);
-	return FALSE;
-}
-
-int __cdecl vehicleScript::setCarLicensePlateText4567(int32_t vehHandle, uint8_t char0, uint8_t char1, uint8_t char2, uint8_t char3) {
-	vehHandle = ((atPool<CVehicle>*)(*g_pCVehicle__ms_pPool))->indexOfHandle(vehHandle);
-	if (vehHandle < g_extVehParams.m_size) {
-		auto params = g_extVehParams.getByIndex(vehHandle);
-
-		auto pChars = params->getPlateChars();
-		pChars[4] = char0;
-		pChars[5] = char1;
-		pChars[6] = char2;
-		pChars[7] = char3;
-
-		return TRUE;
-	}
-	else 
-		PRINT_DUBUG("SET_CAR_LICENSE_PLATE_TEXT_4567: veh index %i out of bounds\n", vehHandle);
-
-	return FALSE;
-}
-
-int __cdecl vehicleScript::setCarLicensePlateText891011(int32_t vehHandle, uint8_t char0, uint8_t char1, uint8_t char2, uint8_t char3) {
-	vehHandle = ((atPool<CVehicle>*)(*g_pCVehicle__ms_pPool))->indexOfHandle(vehHandle);
-	if (vehHandle < g_extVehParams.m_size) {
-		auto params = g_extVehParams.getByIndex(vehHandle);
-
-		auto pChars = params->getPlateChars();
-		pChars[8] = char0;
-		pChars[9] = char1;
-		pChars[10] = char2;
-		pChars[11] = char3;
-		
-		return TRUE;
-	}
-	else 
-		PRINT_DUBUG("SET_CAR_LICENSE_PLATE_TEXT_891011: veh handle %i out of bounds\n", vehHandle);
-
-	return FALSE;
-}
-
-int __cdecl vehicleScript::n_nullCall(native_obj* _a) {
+int32_t __cdecl n_nullCall(native_obj* _a) {
 	return TRUE;
 }
-int __cdecl vehicleScript::n_setCarLicensePlateText0123(native_obj* _a) {
+int32_t __cdecl n_setCarLicensePlateText0123(native_obj* _a) {
 	return setCarLicensePlateText0123(_a->_f8[0], _a->_f8[1], _a->_f8[2], _a->_f8[3], _a->_f8[4]);
 }
-int __cdecl vehicleScript::n_setCarLicensePlateText4567(native_obj* _a) {
+int32_t __cdecl n_setCarLicensePlateText4567(native_obj* _a) {
 	return setCarLicensePlateText4567(_a->_f8[0], _a->_f8[1], _a->_f8[2], _a->_f8[3], _a->_f8[4]);
 }
-int __cdecl vehicleScript::n_setCarLicensePlateText891011(native_obj* _a) {
+int32_t __cdecl n_setCarLicensePlateText891011(native_obj* _a) {
 	return setCarLicensePlateText891011(_a->_f8[0], _a->_f8[1], _a->_f8[2], _a->_f8[3], _a->_f8[4]);
 }
 
 
+int32_t __cdecl n_setCarLicensePlateTextTintUByte4(native_obj* _a) {
+	return setCarLicensePlateTextTintUByte4(_a->_f8[0], _a->_f8[1], _a->_f8[2], _a->_f8[3], _a->_f8[4]);
+}
+int32_t __cdecl n_setCarLicensePlateTextTintFloat4(native_obj* _a) {
+	return setCarLicensePlateTextTintFloat4(_a->_f8[0], *reinterpret_cast<float*>(&_a->_f8[1]), *reinterpret_cast<float*>(&_a->_f8[2]),
+		*reinterpret_cast<float*>(&_a->_f8[3]), *reinterpret_cast<float*>(&_a->_f8[4]));
+}
+int32_t __cdecl n_setCarLicensePlateTextLength(native_obj* _a) {
+	return setCarLicensePlateTextLength(_a->_f8[0], _a->_f8[1]);
+}
+int32_t __cdecl n_setCarLicensePlateTextTexture(native_obj* _a) {
+	return setCarLicensePlateTextTexture(_a->_f8[0], _a->_f8[1]);
+}
+int32_t __cdecl n_setCarLicensePlatePlateTexture(native_obj* _a) {
+	return setCarLicensePlatePlateTexture(_a->_f8[0], _a->_f8[1]);
+}
+int32_t __cdecl n_setCarLicensePlateTextScale(native_obj* _a) {
+	return setCarLicensePlateTextScale(_a->_f8[0], *reinterpret_cast<float*>(&_a->_f8[1]), *reinterpret_cast<float*>(&_a->_f8[2]));
+}
+int32_t __cdecl n_setCarLicensePlateTextOffset(native_obj* _a) {
+	return setCarLicensePlateTextOffset(_a->_f8[0], *reinterpret_cast<float*>(&_a->_f8[1]), *reinterpret_cast<float*>(&_a->_f8[2]));
+}
+
 
 void __cdecl vehicleScript::registerNewCommands() {
+
+
 	if (CConfig::ms_bLicensePlates) {
 		rage__scrThread__registerCommand(0x09ded943, (size_t)n_setCarLicensePlateText0123);
-		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "vehicleScript::setCarLicensePlateText0123", 0x09DED943);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateText0123", 0x09DED943);
 
 		rage__scrThread__registerCommand(0x09de9587, (size_t)n_setCarLicensePlateText4567);
-		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "vehicleScript::setCarLicensePlateText4567", 0x09de9587);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateText4567", 0x09de9587);
 
 		rage__scrThread__registerCommand(0x0e515a91, (size_t)n_setCarLicensePlateText891011);
-		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "vehicleScript::setCarLicensePlateText891011", 0x0e515a91);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateText891011", 0x0e515a91);
+
+		rage__scrThread__registerCommand(0x1BC06350, (size_t)n_setCarLicensePlateTextTintUByte4);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateTextTintUByte4", 0x1BC06350);
+
+		rage__scrThread__registerCommand(0x3FFFB335, (size_t)n_setCarLicensePlateTextTintFloat4);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateTextTintFloat4", 0x3FFFB335);
+
+		rage__scrThread__registerCommand(0x46F3540C, (size_t)n_setCarLicensePlateTextLength);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateTextLength", 0x46F3540C);
+
+		rage__scrThread__registerCommand(0xF055490B, (size_t)n_setCarLicensePlateTextTexture);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateTextTexture", 0xF055490B);
+
+		rage__scrThread__registerCommand(0xC621B628, (size_t)n_setCarLicensePlatePlateTexture);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlatePlateTexture", 0xC621B628);
+
+		rage__scrThread__registerCommand(0x6C688F74, (size_t)n_setCarLicensePlateTextScale);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateTextScale", 0x6C688F74);
+
+		rage__scrThread__registerCommand(0x04C26575, (size_t)n_setCarLicensePlateTextOffset);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "setCarLicensePlateTextOffset", 0x04C26575);
 
 	}
 	else {
 		rage__scrThread__registerCommand(0x09ded943, (size_t)n_nullCall);
-		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "vehicleScript::nullCall", 0x09DED943);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x09DED943);
 		
 		rage__scrThread__registerCommand(0x09de9587, (size_t)n_nullCall);
-		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "vehicleScript::nullCall", 0x09de9587);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x09de9587);
 
 		rage__scrThread__registerCommand(0x0e515a91, (size_t)n_nullCall);
-		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "vehicleScript::nullCall", 0x0e515a91);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x0e515a91);
+
+		rage__scrThread__registerCommand(0x1BC06350, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x1BC06350);
+
+		rage__scrThread__registerCommand(0x3FFFB335, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x3FFFB335);
+
+		rage__scrThread__registerCommand(0x46F3540C, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x46F3540C);
+
+		rage__scrThread__registerCommand(0xF055490B, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0xF055490B);
+
+		rage__scrThread__registerCommand(0xC621B628, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0xC621B628);
+
+		rage__scrThread__registerCommand(0x6C688F74, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x6C688F74);
+
+		rage__scrThread__registerCommand(0x04C26575, (size_t)n_nullCall);
+		PRINT_DUBUG("[vehicleScript::registerNewCommands] added command %s as %#010x\n", "nullCall", 0x04C26575);
 	}
 
 }
@@ -518,6 +531,10 @@ void vehicleScript::init() {
 
 void rage__grmShaderGroup__setVarVector4(grmShaderGroup* pShaderGroup, int32_t groupIndex, float* pVec) {
 	((void(__thiscall*)(grmShaderGroup * pShaderGroup, int groupIndex, float* pVec))(g_rage__grmShaderGroup__SetVarVector4))(pShaderGroup, groupIndex, pVec);
+}
+
+void rage__grmShaderGroup__setVarTexture(grmShaderGroup* pShaderGroup, int32_t groupIndex, grcTexture* pTxd) {
+	((void(__thiscall*)(grmShaderGroup *, int, grcTexture*))g_rage__grmShaderGroup__setVarTexture)(pShaderGroup, groupIndex, pTxd);
 }
 
 uint32_t rage__grmShaderGroup__addShaderGroupVar(grmShaderGroup* pShaderGroup, const char* pszName, bool bRequired) {

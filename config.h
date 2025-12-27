@@ -14,6 +14,8 @@ public:
 	static bool ms_bPopupHeadlights;
 	static bool ms_bTankComponents;
 	static bool ms_bMoreWheels;
+	static bool ms_bImportExportData;
+	static bool ms_bUseFastRandom;
 
 	static bool ms_bTrue;
 

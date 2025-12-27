@@ -16,6 +16,9 @@
 #include "tankComponents.h"
 #include "newVehFlags.h"
 #include "weapon.h"
+#include "licensePlates.h"
+#include "reloader.h"
+#include "utils.h"
 
 static void enableConsole() {
 	FILE* pFile = NULL;
@@ -55,13 +58,19 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 
 			}
 		}
+
+		if(initAddrsDynamicAll())
+			MessageBoxA(nullptr, "Addresses could not be determined", nullptr, 0x10);
+
 		initHelpers();
 
 		CConfig::read();
-	
+		
+		initRandom();
+
 		//g_sound.init(nullptr);
 
-		//runTest();
+		runTest();
 
 		CVehExtParams::init();
 		CCustomShaderEffectVehicleFX::initHooks();
@@ -76,6 +85,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 		initNewComponents();
 		initTankComponents();
 		initWeapons();
+
+		CPlateFactory::init();
+		initReloader();
 
 		break;
 	}

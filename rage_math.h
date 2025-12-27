@@ -3,6 +3,15 @@
 
 #define RAGE_PI 3.1415926535f
 
+struct Rect {
+	float minX;
+	float maxX;
+	float minY;
+	float maxY;
+
+	//Rect(float _minX, float _minX, float _minX, float _minX)
+};
+
 struct Vector3 {
 	float x, y, z, w;
 	

@@ -57,7 +57,8 @@ void parseCarWeap(char* line) {
 
 	PRINT_DUBUG("reading weapons for %s\n", tok);
 
-	auto namehash = jenkins_one_at_a_time_hash(tok);
+	uint32_t namehash = getOrParseHash(tok);
+
 	CCarWeapInfo* info;
 	if (g_carWeapInfo.count(namehash))
 		info = g_carWeapInfo[namehash];
@@ -68,7 +69,9 @@ void parseCarWeap(char* line) {
 	auto slot = &info->m_aWeapons[atoi(tok)];
 
 	tok = strtok(nullptr, tokChars);
-	auto hash = jenkins_one_at_a_time_hash(tok);
+	//auto hash = jenkins_one_at_a_time_hash(tok);
+	uint32_t hash = getOrParseHash(tok);
+
 
 	slot->m_weapId = ((int (__cdecl*)(int, int))(g_getWeaponInfoIdByName))(hash, -1);
 	if (slot->m_weapId == -1) {
@@ -79,6 +82,7 @@ void parseCarWeap(char* line) {
 	}
 	else
 		PRINT_DUBUG("weap id %i\n", slot->m_weapId);
+	slot->m_weapNameHash = hash;
 
 	tok = strtok(nullptr, tokChars);
 	slot->m_numBones = atoi(tok);
@@ -127,10 +131,46 @@ void parseCarWeap(char* line) {
 
 }
 
-int __cdecl readIde(char *path, char* mode) {
+void exportCarWeap(FILE* f) {
+	for (auto& entry : g_carWeapInfo) {
+		for (size_t i = 0; i < 3; i++) {
+			if (entry.second->m_aWeapons[i].m_weapId == -1)
+				continue;
+			fprintf(f, "hash:%i %i hash:%i %i", entry.first, i, entry.second->m_aWeapons[i].m_weapNameHash, entry.second->m_aWeapons[i].m_numBones);
+			for (size_t j = 0; j < entry.second->m_aWeapons[i].m_numBones; j++) {
+				// ToDo: make switch
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_A)
+					fprintf(f, " %s", "weapon_a");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_B)
+					fprintf(f, " %s", "weapon_b");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_C)
+					fprintf(f, " %s", "weapon_c");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_D)
+					fprintf(f, " %s", "weapon_d");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_E)
+					fprintf(f, " %s", "weapon_e");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_F)
+					fprintf(f, " %s", "weapon_f");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_G)
+					fprintf(f, " %s", "weapon_g");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_H)
+					fprintf(f, " %s", "weapon_h");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_I)
+					fprintf(f, " %s", "weapon_i");
+				if(entry.second->m_aWeapons[i].m_aBones[j] == COMPONENT_WEAPON_J)
+					fprintf(f, " %s", "weapon_j");
+
+			}
+			fprintf(f, "\n");
+
+		}
+
+	}
+}
+
+template <bool _ReadIde> int __cdecl readIde(char *path, char* mode) {
 	auto hRageFile = ((void* (__cdecl*)(char*, char*))(g_gta_fopen))(path, mode);
 	
-
 	int type = 0;
 
 	if (hRageFile) {
@@ -156,26 +196,68 @@ int __cdecl readIde(char *path, char* mode) {
 										parseCarWeap(line);
 										break;
 									case 2:
-										parseCarPlatesIde(line);
+										CPlateFactory::parseCarPlatesIde(line);
+										break;
+									case 3:
+										CPlateFactory::parseLicensePlatesIde(line);
 										break;
 									}
 								}
 							}
 							else if (line[0] == 'c' && line[1] == 'a' && line[2] == 'r' && line[3] == 'w' && line[4] == 'e' && line[5] == 'a' && line[6] == 'p')
 								type = 1;
-							else if (line[0] == 'c' && line[1] == 'a' && line[2] == 'r' && line[3] == 'p' && line[4] == 'l' && line[5] == 'a' && line[6] == 't' && line[7] == 'e' && line[8] == 's')
+							else if (line[0] == 'u' && line[1] == 's' && line[2] == 'e' && line[3] == 'd' && line[4] == '_' && line[5] == 'p' && line[6] == 'l' && line[7] == 'a' && line[8] == 't' && line[9] == 'e' && line[10] == 's')
 								type = 2;
+							else if (line[0] == 'l' && line[1] == 'i' && line[2] == 'c' && line[3] == 'e' && line[4] == 'n' && line[5] == 's' && line[6] == 'e' && line[7] == '_' && line[8] == 'p' && line[9] == 'l' && line[10] == 'a' && line[11] == 't' && line[12] == 'e' && line[13] == 's')
+								type = 3;
 						}
 					}
 				}
+				fclose(f);
 			}
 		}
-
 		((void(__cdecl*)(void*))(g_gta_fclose))(hRageFile);
 	}
 
-	return ((int(__cdecl*)(char*, char*))(g_readIde_origcall))(path, mode);
+	if constexpr (_ReadIde)
+		return ((int(__cdecl*)(char*, char*))(g_readIde_origcall))(path, mode);
+	else
+		return 0;
 
+}
+
+
+void readIdeData() {
+	PRINT_DUBUG("reading data\n");
+
+	char buf[0x20];
+	strcpy(buf, "exportedData.ide");
+	int end = strlen(buf) + 1;
+	strcpy(buf + end, "r");
+
+	CPlateFactory::clearUsedPlates();
+
+	readIde<false>(buf, buf + end);
+}
+
+void dumpIdeData() {
+	PRINT_DUBUG("dumping data\n");
+	FILE* f = fopen("exportedData.ide", "w");
+
+
+	fprintf(f, "license_plates\n");
+	CPlateFactory::exportLicensePlatesIde(f);
+	fprintf(f, "end\n\n");
+
+	fprintf(f, "used_plates\n");
+	CPlateFactory::exportCarPlatesIde(f);
+	fprintf(f, "end\n\n");
+
+	fprintf(f, "carweap\n");
+	exportCarWeap(f);
+	fprintf(f, "end\n");
+
+	fclose(f);
 }
 
 
@@ -291,6 +373,11 @@ struct CAutomobile : CVehicle {
 		char vehicleFlags1_0 = g_pfnGetVehFlags1_0(this);
 		if ((vehicleFlags1_0 & 8) == 0)
 			return;
+
+		//{
+		//	auto pMdl = g_modelPointers[this->getModelIndex()];
+		//	printf("%p\n", &pMdl->m_pDrawableRef->pDrawable->m_pShaderGroup->m_ppShaders[0]->m_instanceData._f1c);
+		//}
 
 		auto pSkel = ((crSkeletonData * (__thiscall*)(CVehicle * _a))(g_CDynamicEntity__getSkeletonData))(this);
 
@@ -590,6 +677,6 @@ void init() {
 
 void initWeapons() {
 	car_weapons::init();
-	g_readIde_origcall = setFnAddrInCallOpcode(g_hookAddr_readIde, (size_t)readIde);
+	g_readIde_origcall = setFnAddrInCallOpcode(g_hookAddr_readIde, (size_t)readIde<true>);
 
 }
