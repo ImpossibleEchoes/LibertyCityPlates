@@ -14,7 +14,7 @@
 
 void __cdecl updateTankTrack(CCustomShaderEffectVehicleFX*, CVehicle* pVeh, CVehExtParams::Params* pExtParams,
 	CCustomShaderEffectVehicleFX::CAddonVars* pVars) {
-	auto pChars = pExtParams->getPlateChars();
+	//auto pChars = pExtParams->getPlateChars(); // why?
 	if (pVars->m_nTrackIndex > 0) {
 
 		auto pTrack = pExtParams->getTankTrackInfo();

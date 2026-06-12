@@ -12,6 +12,7 @@
 #include "crSkeleton.h"
 #include "helpers.h"
 #include "licensePlates.h"
+#include "liveries.h"
 
 std::map<uint32_t, CCarWeapInfo*> g_carWeapInfo;
 
@@ -201,6 +202,9 @@ template <bool _ReadIde> int __cdecl readIde(char *path, char* mode) {
 									case 3:
 										CPlateFactory::parseLicensePlatesIde(line);
 										break;
+									case 4:
+										parseLiveriesIde(line);
+										break;
 									}
 								}
 							}
@@ -210,6 +214,8 @@ template <bool _ReadIde> int __cdecl readIde(char *path, char* mode) {
 								type = 2;
 							else if (line[0] == 'l' && line[1] == 'i' && line[2] == 'c' && line[3] == 'e' && line[4] == 'n' && line[5] == 's' && line[6] == 'e' && line[7] == '_' && line[8] == 'p' && line[9] == 'l' && line[10] == 'a' && line[11] == 't' && line[12] == 'e' && line[13] == 's')
 								type = 3;
+							else if (line[0] == 'a' && line[1] == 'r' && line[2] == 'e' && line[3] == 'a' && line[4] == '_' && line[5] == 'l' && line[6] == 'i' && line[7] == 'v' && line[8] == 'e' && line[9] == 'r' && line[10] == 'i' && line[11] == 'e' && line[12] == 's')
+								type = 4;
 						}
 					}
 				}

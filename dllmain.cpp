@@ -19,6 +19,7 @@
 #include "licensePlates.h"
 #include "reloader.h"
 #include "utils.h"
+#include "liveries.h"
 
 static void enableConsole() {
 	FILE* pFile = NULL;
@@ -70,7 +71,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 
 		//g_sound.init(nullptr);
 
-		runTest();
+		//runTest();
 
 		CVehExtParams::init();
 		CCustomShaderEffectVehicleFX::initHooks();
@@ -88,6 +89,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 
 		CPlateFactory::init();
 		initReloader();
+		initLiveries();
 
 		break;
 	}

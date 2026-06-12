@@ -101,7 +101,27 @@ void __cdecl checkVehStruct2(CVehicle* _a, CVehExtParams::Params* pParams, crSke
 			"supercharger_2",
 			"supercharger_3",
 			"popup_headlights",
+			"platelight",
+			"platelight_2",
+			"platelight_3",
+			"platelight_4",
 
+			"exhaust",
+			"exhaust_2",
+			"exhaust_3",
+			"exhaust_4",
+			"exhaust_5",
+			"exhaust_6",
+			"exhaust_7",
+			"exhaust_8",
+			"exhaust_9",
+			"exhaust_10",
+			"exhaust_11",
+			"exhaust_12",
+			"exhaust_13",
+			"exhaust_14",
+			"exhaust_15",
+			"exhaust_16",
 
 			"roll_l_1",
 			"roll_l_2",
@@ -487,6 +507,12 @@ void __cdecl prerenderEngineComponents(CVehicle* _a, CVehExtParams::Params* pPar
 			Vector3 vec{ 0,1,0,0 };
 			q.fromAxisAngle(vec, rot);
 
+			//Quaternion quat2;
+			////quat2 = pBone->m_vRotationQuaternion;
+			//quat2.fromMatrix(pMtx);
+
+			//Quaternion quat3 = quat2 * q;
+
 			pMtx->fromQuaternion(q);
 		}
 	}
@@ -504,6 +530,11 @@ void __cdecl prerenderEngineComponents(CVehicle* _a, CVehExtParams::Params* pPar
 			Quaternion q;
 			Vector3 vec{ 1,0,0,0 };
 			q.fromAxisAngle(vec, rot);
+
+			//Quaternion quat2;
+			//quat2 = pBone->m_vRotationQuaternion;
+
+			//Quaternion quat3 = quat2 * q;
 
 			pMtx->fromQuaternion(q);
 		}

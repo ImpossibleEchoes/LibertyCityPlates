@@ -28,6 +28,7 @@ size_t CVehExtParams::Params::ms_engineRotOffset = -1;
 size_t CVehExtParams::Params::ms_superchargerThrottleRotOffset = -1;
 size_t CVehExtParams::Params::ms_tankTrackParamsOffset = -1;
 size_t CVehExtParams::Params::ms_moreWheelsOffset = -1;
+size_t CVehExtParams::Params::ms_moreWheelsNumWheels = -1;
 size_t CVehExtParams::Params::ms_useTankSkidmarkOffset = -1;
 size_t CVehExtParams::Params::ms_vehWeapOffset = -1;
 size_t CVehExtParams::Params::ms_plateInfoOffset = -1;
@@ -272,6 +273,10 @@ void CVehExtParams::init() {
 		Params::ms_moreWheelsOffset = Params::ms_size;
 		Params::ms_size += sizeof(CWheel) * 10;
 		PRINT_DUBUG("\t%s; // +%X\n", "CWheel m_moreWheels[10]", Params::ms_moreWheelsOffset);
+
+		Params::ms_moreWheelsNumWheels = Params::ms_size;
+		Params::ms_size += sizeof(uint32_t);
+		PRINT_DUBUG("\t%s; // +%X\n", "uint32_t m_moreWheelsNumWheels", Params::ms_moreWheelsNumWheels);
 
 	}
 

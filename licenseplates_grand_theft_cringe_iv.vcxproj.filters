@@ -84,6 +84,12 @@
     <ClInclude Include="reloader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="liveries.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -144,6 +150,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="reloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="liveries.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

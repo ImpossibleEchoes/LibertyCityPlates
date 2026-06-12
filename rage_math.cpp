@@ -175,3 +175,38 @@ float sign(float a1) {
 		return 1.f;
 	return 0.f;
 }
+
+void Quaternion::fromMatrix(Matrix34* m) {
+
+	float tr = m->a.x + m->b.y + m->c.z;
+
+	if (tr > 0.0f) {
+		float s = sqrt(tr + 1.0f) * 2.0f; // s = 4 * w
+		w = 0.25f * s;
+		x = (m->b.z - m->c.y) / s;
+		y = (m->c.x - m->a.z) / s;
+		z = (m->a.y - m->b.x) / s;
+	}
+	else if ((m->a.x > m->b.y) && (m->a.x > m->c.z)) {
+		float s = sqrt(1.0f + m->a.x - m->b.y - m->c.z) * 2.0f; // s = 4 * x
+		w = (m->b.z - m->c.y) / s;
+		x = 0.25f * s;
+		y = (m->a.y + m->b.x) / s;
+		z = (m->a.z + m->c.x) / s;
+	}
+	else if (m->b.y > m->c.z) {
+		float s = sqrt(1.0f + m->b.y - m->a.x - m->c.z) * 2.0f; // s = 4 * y
+		w = (m->c.x - m->a.z) / s;
+		x = (m->a.y + m->b.x) / s;
+		y = 0.25f * s;
+		z = (m->b.z + m->c.y) / s;
+	}
+	else {
+		float s = sqrt(1.0f + m->c.z - m->a.x - m->b.y) * 2.0f; // s = 4 * z
+		w = (m->a.y - m->b.x) / s;
+		x = (m->a.z + m->c.x) / s;
+		y = (m->b.z + m->c.y) / s;
+		z = 0.25f * s;
+	}
+
+}

@@ -8,6 +8,8 @@
 #include "CVehicle.h"
 #include "config.h"
 #include "rage_base.h"
+#include "newComponents.h"
+#include "helpers.h"
 
 #include <map>
 #include <vector>
@@ -596,9 +598,73 @@ void __cdecl CPlateFactory::setStandartLicensePlate(CVehicle* pVeh, CVehExtParam
 
 }
 
-void CPlateFactory::init() {
 
+__forceinline int __cdecl CLights__addSceneLight(int a1, int a2, int a3, float* a4, float* a5, float* a6, float* lightColor, float lightIntensity,
+	int a9, int a10, float lightRadius, float a12, float a13, int a14, int a15, int a16) {
+	return ((int(__cdecl*)
+		(int a1, int a2, int a3, float* a4, float* a5, float* a6, float* lightColor, float lightIntensity, int a9, int a10, float lightRadius, float a12, float a13, int a14, int a15, int a16))
+		g_CLights__addSceneLight)
+		(a1, a2, a3, a4, a5, a6, lightColor, lightIntensity, a9, a10, lightRadius, a12, a13, a14, a15, a16);
+}
+struct VehicleTailLightsHook : CVehicle {
+	static size_t ms_processTailLights;
+
+	bool processTailLights(int a2, int a3, int a4, char a5, char a6, char a7, float a8, float a9, int a10, float* a11, char a12) {
+		auto ret = ((bool (__thiscall*)(CVehicle *, int, int, int, char, char, char, float, float, int, float*, char))(ms_processTailLights))(
+			this, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+
+		bool b1 = *g_pdwGameTimer < g_pfnGetUnkTimer(this) && (*g_pdwGameTimer & 0x100) != 0;
+		bool b2 = (g_pfnGetVehicleFlags2_1(this) & 2) != 0 || b1;
+		if ((g_pfnGetVehicleFlags1_1(this) & 1) != 0)
+			b2 = true;
+		if ((g_pfnGetForceCarLightMask(this) & 3) == 2 || b2)
+			b1 = true;
+		else
+			b1 = false;
+
+		if (b1) {
+
+			CVehExtParams::Params* pParams = g_extVehParams.getFromVehicle(this);
+
+			auto pStruct = pParams->getStruct();
+
+			for (size_t i = COMPONENT_PLATELIGHT_FIRST; i <= COMPONENT_PLATELIGHT_LAST; i++) {
+
+				if (pStruct->m_aBones[i] != -1) {
+					auto index = pStruct->m_aBones[i];
+					Matrix34* pGlobalMtx = ((Matrix34 * (__thiscall*)(CVehicle*, int))g_CDynamicEntity__getGlobalMtx)(this, index);
+
+					Vector3 vecColor = { 1.f, 1.f, 1.f };
+
+					float f1 = 20.f;
+					int i2 = 0;
+					float f3 = 0.25;
+					float f4 = 90.f;
+					float f5 = 90.f;
+					int i6 = 0;
+					uint32_t i7 = g_pfnGetEntityInteriorHandle(this);
+					uint8_t i8 = g_pfnGetEntityInteriorPortal(this);
+					int i9 = 256;
+					int i10 = 2;
+					int i11 = 0;
+
+					CLights__addSceneLight(i11, i10, i9, &pGlobalMtx->c.x, &pGlobalMtx->b.x, &pGlobalMtx->d.x, &vecColor.x, f1, i2, *g_CLights__m_pDefaultTxdID, f3, f4, f5, i7, i8, i6);
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	static void init() {
+		ms_processTailLights = setFnAddrInCallOpcode(g_hookAddr_processTailLights, getThisCallAddr(&processTailLights));
+	}
+};
+size_t VehicleTailLightsHook::ms_processTailLights;
+
+void CPlateFactory::init() {
 	if (CConfig::ms_bLicensePlates) {
+		VehicleTailLightsHook::init();
 		PlateTxds::init();
 		ms_plateTexturesHashes.init();
 

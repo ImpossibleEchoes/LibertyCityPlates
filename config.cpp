@@ -23,7 +23,7 @@ float CConfig::ms_fMinBumperStrength = 1000;
 bool CConfig::ms_bFixDoubleSkidmark = false;
 bool CConfig::ms_bPopupHeadlights = false;
 bool CConfig::ms_bTankComponents = false;
-bool CConfig::ms_bMoreWheels = false;
+bool CConfig::ms_bMoreWheels = true;
 bool CConfig::ms_bImportExportData = false;
 bool CConfig::ms_bUseFastRandom = false;
 

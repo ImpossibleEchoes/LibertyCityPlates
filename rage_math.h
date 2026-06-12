@@ -3,6 +3,8 @@
 
 #define RAGE_PI 3.1415926535f
 
+struct Matrix34;
+
 struct Rect {
 	float minX;
 	float maxX;
@@ -12,13 +14,13 @@ struct Rect {
 	//Rect(float _minX, float _minX, float _minX, float _minX)
 };
 
-struct Vector3 {
+struct alignas(0x10) Vector3 {
 	float x, y, z, w;
 	
 	void normalize();
 };
 
-struct Vector4 {
+struct alignas(0x10) Vector4 {
 	float x, y, z, w;
 };
 
@@ -26,7 +28,7 @@ struct Vec3 {
 	float x, y, z;
 };
 
-struct Quaternion {
+struct alignas(0x10) Quaternion {
 	float x, y, z, w;
 
 	void normalize();
@@ -34,6 +36,8 @@ struct Quaternion {
 	Quaternion operator*(const Quaternion& other) const;
 
 	void fromAxisAngle(const Vector3& axis, float angle_rad);
+
+	void fromMatrix(Matrix34* m);
 };
 
 struct Matrix34 {
@@ -75,6 +79,8 @@ struct Matrix34 {
 
 		return this;
 	}
+
+
 };
 
 float normalizeAngleSafeWithClamp25(float angle);

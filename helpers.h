@@ -29,6 +29,9 @@ extern float *(*g_pfnGetAutomobileUnkCannonVal)(CVehicle*);
 extern CPed *(*g_pfnGetDriver)(CVehicle*);
 extern CVehicle*(*g_pfnGetVehicle)(CPed*);
 
+extern int32_t(*g_pfnGetEntityInteriorHandle)(CVehicle*);
+extern uint8_t(*g_pfnGetEntityInteriorPortal)(CVehicle*);
+
 namespace missing_funcs {
 struct CPed_CE_getIsPlayer {
 	uint8_t __0[0x300];

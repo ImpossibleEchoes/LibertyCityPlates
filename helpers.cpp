@@ -27,6 +27,9 @@ float*(*g_pfnGetAutomobileUnkCannonVal)(CVehicle*);
 CPed* (*g_pfnGetDriver)(CVehicle*);
 CVehicle* (*g_pfnGetVehicle)(CPed*);
 
+int32_t(*g_pfnGetEntityInteriorHandle)(CVehicle*);
+uint8_t(*g_pfnGetEntityInteriorPortal)(CVehicle*);
+
 
 namespace legacy_fns {
 
@@ -51,6 +54,8 @@ uint8_t getForceCarLightMask(CVehicle* pVeh) { return *(uint8_t*)((uint8_t*)pVeh
 float* getAutomobileUnkCannonVal(CVehicle* pVeh) { return (float*)((uint8_t*)pVeh + 0x14E8); }
 CPed* getDriver(CVehicle* pVeh) { return *(CPed**)((uint8_t*)pVeh + 0xFA0); }
 CVehicle* getVehicle(CPed* pPed) { return *(CVehicle**)((uint8_t*)pPed + 0xB40); }
+int32_t getEntityInteriorHandle(CVehicle* pVeh) { return *(int32_t*)((uint8_t*)pVeh + 0x48); }
+uint8_t getEntityInteriorPortal(CVehicle* pVeh) { return *(uint8_t*)((uint8_t*)pVeh + 0x40); }
 
 void set() {
 	g_pfnGetVehRpm = getRpm;
@@ -74,6 +79,9 @@ void set() {
 	g_pfnGetAutomobileUnkCannonVal = getAutomobileUnkCannonVal;
 	g_pfnGetDriver = getDriver;
 	g_pfnGetVehicle = getVehicle;
+
+	g_pfnGetEntityInteriorHandle = getEntityInteriorHandle;
+	g_pfnGetEntityInteriorPortal = getEntityInteriorPortal;
 
 }
 
@@ -103,6 +111,9 @@ float* getAutomobileUnkCannonVal(CVehicle* pVeh) { return (float*)((uint8_t*)pVe
 CPed* getDriver(CVehicle* pVeh) { return *(CPed**)((uint8_t*)pVeh + 0xFA0 - 0x50); }
 CVehicle* getVehicle(CPed* pPed) { return *(CVehicle**)((uint8_t*)pPed + 0xB30); }
 
+int32_t getEntityInteriorHandle(CVehicle* pVeh) { return *(int32_t*)((uint8_t*)pVeh + 0x48); }
+uint8_t getEntityInteriorPortal(CVehicle* pVeh) { return *(uint8_t*)((uint8_t*)pVeh + 0x40); }
+
 void set() {
 	g_pfnGetVehRpm = getRpm;
 	g_pfnGetVehNumWheels = getNumWheels;
@@ -126,6 +137,9 @@ void set() {
 	g_pfnGetAutomobileUnkCannonVal = getAutomobileUnkCannonVal;
 	g_pfnGetDriver = getDriver;
 	g_pfnGetVehicle = getVehicle;
+
+	g_pfnGetEntityInteriorHandle = getEntityInteriorHandle;
+	g_pfnGetEntityInteriorPortal = getEntityInteriorPortal;
 }
 
 }

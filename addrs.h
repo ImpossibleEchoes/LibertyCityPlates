@@ -56,6 +56,12 @@ struct CVehicleModelInfo {
 	uint32_t m_hash; // +3C
 	char __40[0x8];
 	uint16_t m_TxdId; // +48
+	uint8_t __4A[2];
+	uint8_t __4C[0x74];
+	uint8_t __C0[0x2];
+	uint8_t m_NumLiveries; // +C2
+
+
 };
 
 extern size_t g_hookAddr_CVehicle__CVehicle; // call opcode
@@ -148,6 +154,14 @@ extern size_t g_CTxdStore__releaseEntry;
 extern size_t g_hookAddr_CWorld__process;
 extern size_t g_nativeCallAddr_isGameKeyboardKeyJustPressed;
 extern size_t g_nativeCallAddr_isGameKeyboardKeyPressed;
+
+extern size_t g_CVehicle__setLivery;
+extern size_t g_CVehicle__applyCustomShaderEffectChanges;
+
+extern size_t g_CLights__addSceneLight;
+extern size_t g_hookAddr_processTailLights;
+extern size_t g_CDynamicEntity__getGlobalMtx;
+extern int* g_CLights__m_pDefaultTxdID;
 
 extern bool g_bIsCE;
 

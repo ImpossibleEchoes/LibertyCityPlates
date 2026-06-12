@@ -101,6 +101,14 @@ size_t g_hookAddr_CWorld__process;
 size_t g_nativeCallAddr_isGameKeyboardKeyJustPressed;
 size_t g_nativeCallAddr_isGameKeyboardKeyPressed;
 
+size_t g_CVehicle__setLivery;
+size_t g_CVehicle__applyCustomShaderEffectChanges;
+
+size_t g_CLights__addSceneLight;
+size_t g_hookAddr_processTailLights;
+size_t g_CDynamicEntity__getGlobalMtx;
+int* g_CLights__m_pDefaultTxdID;
+
 // конец
 CHandlingVehicle* g_handling;
 
@@ -143,7 +151,6 @@ uint32_t initAddrsDynamicAll() {
 	return result;
 }
 
-// ToDo: add CVehicle::setBoneRotation addr
 uint32_t initAddrsDynamicLegacy() {
 
 	// check for CE
@@ -528,6 +535,34 @@ uint32_t initAddrsDynamicLegacy() {
 		g_CTxdStore__releaseEntry = getFnAddrInCallOpcode(g_CTxdStore__releaseEntry);
 	else
 		result |= 1 << 30;
+
+
+	g_CVehicle__setLivery = findPattern("8B 41 34 8B 40 04 85 C0 74 0A");
+	if (!g_CVehicle__setLivery)
+		result |= 1 << 30;
+
+	g_CVehicle__applyCustomShaderEffectChanges = findPattern("8B C1 8B 48 34 8B 49 04 85 C9 74 08 ");
+	if (!g_CVehicle__applyCustomShaderEffectChanges)
+		result |= 1 << 30;
+
+
+	g_CLights__addSceneLight = findPattern("8B 15 ? ? ? ? 52 6A 00 51 D9 1C 24 8D 44 24 74 50 8D 4C 24 68 51 8D 54 24 4C 52 8D 44 24 60 50 68 ? ? ? ? 6A 02 6A 00 E8 ? ? ? ? ");
+	if (!g_CLights__addSceneLight)
+		result |= 1 << 30;
+	else {
+		g_CLights__m_pDefaultTxdID = reinterpret_cast<int*>(g_CLights__addSceneLight + 2);
+		g_CLights__addSceneLight = getFnAddrInCallOpcode(g_CLights__addSceneLight + 0x2A);
+	}
+
+	g_hookAddr_processTailLights = findPattern("E8 ? ? ? ? D9 44 24 38 8B 54 24 2C 57 56 51 8B 4C 24 40 D9 1C 24 51 ");
+	if (!g_hookAddr_processTailLights)
+		result |= 1 << 30;
+
+	g_CDynamicEntity__getGlobalMtx = findPattern("50 8B CF E8 ? ? ? ? D9 05 ? ? ? ? 0F 57 C0 6A", 3);
+	if (!g_CDynamicEntity__getGlobalMtx)
+		result |= 1 << 30;
+	else
+		g_CDynamicEntity__getGlobalMtx = getFnAddrInCallOpcode(g_CDynamicEntity__getGlobalMtx);
 
 
 	return result;
@@ -965,11 +1000,38 @@ uint32_t initAddrsDynamicCE() {
 	if (!g_hookAddr_releasePlateTxd)
 		result |= 1 << 30;
 
-	g_CTxdStore__releaseEntry = findPattern("E8 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 8A 0D ? ? ? ? 83 C4 14 8B E8 80 F9 72 0F 84 ? ? ? ? 80 F9 6A ");
+
+	g_CTxdStore__releaseEntry = findPattern("E8 ? ? ? ? 83 C4 0C 83 3D ? ? ? ? ? 74 1D 68 ? ? ? ? C7 05 ? ? ? ? ? ? ? ? ");
 	if (g_CTxdStore__releaseEntry)
 		g_CTxdStore__releaseEntry = getFnAddrInCallOpcode(g_CTxdStore__releaseEntry);
 	else
 		result |= 1 << 30;
+
+	g_CVehicle__setLivery = findPattern("8B 41 34 8B 48 04 85 C9 74 0A");
+	if (!g_CVehicle__setLivery)
+		result |= 1 << 30;
+
+	g_CVehicle__applyCustomShaderEffectChanges = findPattern("8B 41 34 8B 40 04 85 C0 74 0A 6A FF 51 8B C8");
+	if (!g_CVehicle__applyCustomShaderEffectChanges)
+		result |= 1 << 30;
+
+	g_CLights__addSceneLight = findPattern("FF 35 ? ? ? ? F3 0F 10 45 ? 6A 00 51 F3 0F 11 04 24 FF 75 14 FF 75 0C 50 8D 44 24 40 50 74 15 68 ? ? ? ? 6A 02 6A 00 E8 ? ? ? ? ");
+	if (!g_CLights__addSceneLight)
+		result |= 1 << 30;
+	else {
+		g_CLights__m_pDefaultTxdID = reinterpret_cast<int*>(g_CLights__addSceneLight + 2);
+		g_CLights__addSceneLight = getFnAddrInCallOpcode(g_CLights__addSceneLight + 0x2A);
+	}
+
+	g_hookAddr_processTailLights = findPattern("E8 ? ? ? ? FF 74 24 60 F3 0F 10 44 24 ? 57 51 8B CE");
+	if (!g_hookAddr_processTailLights)
+		result |= 1 << 30;
+
+	g_CDynamicEntity__getGlobalMtx = findPattern("50 8B CE E8 ? ? ? ? 6A 00 83 EC 08 8B", 3);
+	if (!g_CDynamicEntity__getGlobalMtx)
+		result |= 1 << 30;
+	else
+		g_CDynamicEntity__getGlobalMtx = getFnAddrInCallOpcode(g_CDynamicEntity__getGlobalMtx);
 
 	return result;
 }

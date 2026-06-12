@@ -114,6 +114,7 @@ public:
 		static size_t ms_superchargerThrottleRotOffset;
 		static size_t ms_tankTrackParamsOffset;
 		static size_t ms_moreWheelsOffset;
+		static size_t ms_moreWheelsNumWheels;
 		static size_t ms_useTankSkidmarkOffset;
 		static size_t ms_vehWeapOffset;
 		static size_t ms_plateInfoOffset;
@@ -193,6 +194,16 @@ public:
 		__forceinline CWheel* getMoreWheels() {
 			CHECK_ADDR(ms_moreWheelsOffset);
 			return getAddr<CWheel>(ms_moreWheelsOffset);
+		}
+
+		__forceinline float getMoreWheelNumWheels() {
+			CHECK_ADDR(ms_moreWheelsNumWheels);
+			return *getAddr<float>(ms_moreWheelsNumWheels);
+		}
+
+		__forceinline void setMoreWheelNumWheels(float val) {
+			CHECK_ADDR(ms_moreWheelsNumWheels);
+			*getAddr<float>(ms_moreWheelsNumWheels) = val;
 		}
 
 		__forceinline bool getUseTankSkidmark() {

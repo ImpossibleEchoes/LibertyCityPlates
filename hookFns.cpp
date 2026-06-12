@@ -14,13 +14,20 @@ bool setProtect(size_t addr, size_t size, uint32_t newProtect) {
 
 void injectFunc(size_t addr, size_t pfn) {
 
-	uint8_t* patch = (uint8_t*)addr + 1;
+	DWORD oldProtect;
 
-	auto retVal = (*(uint32_t*)patch + (addr + 5));
-	setProtect(addr, 5, PAGE_EXECUTE_READWRITE);
-	*(patch - 1) = 0xE9;
-	*(uint32_t*)patch = (pfn - (addr + 5));
-	setProtect(addr, 5, g_dwOldProtect);
+	if (VirtualProtect(reinterpret_cast<void*>(addr), 5, PAGE_EXECUTE_READWRITE, &oldProtect)) {
+
+		uint8_t* patch = reinterpret_cast<uint8_t*>(addr);
+
+		*patch = 0xE9;
+
+		*reinterpret_cast<uint32_t*>(patch + 1) = static_cast<uint32_t>(pfn - (addr + 5));
+
+		VirtualProtect(reinterpret_cast<void*>(addr), 5, oldProtect, &oldProtect);
+
+		FlushInstructionCache(GetCurrentProcess(), reinterpret_cast<void*>(addr), 5);
+	}
 
 }
 
