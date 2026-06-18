@@ -663,8 +663,10 @@ struct VehicleTailLightsHook : CVehicle {
 size_t VehicleTailLightsHook::ms_processTailLights;
 
 void CPlateFactory::init() {
-	if (CConfig::ms_bLicensePlates) {
+	if (CConfig::ms_bPlateLight)
 		VehicleTailLightsHook::init();
+
+	if (CConfig::ms_bLicensePlates) {
 		PlateTxds::init();
 		ms_plateTexturesHashes.init();
 

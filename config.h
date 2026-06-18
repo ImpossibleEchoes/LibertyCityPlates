@@ -16,6 +16,7 @@ public:
 	static bool ms_bMoreWheels;
 	static bool ms_bImportExportData;
 	static bool ms_bUseFastRandom;
+	static bool ms_bPlateLight;
 
 	static bool ms_bTrue;
 

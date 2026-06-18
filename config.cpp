@@ -26,6 +26,7 @@ bool CConfig::ms_bTankComponents = false;
 bool CConfig::ms_bMoreWheels = false;
 bool CConfig::ms_bImportExportData = false;
 bool CConfig::ms_bUseFastRandom = false;
+bool CConfig::ms_bPlateLight = false;
 
 void showError(const char* pszText) {
 	MessageBoxA(nullptr, pszText, "LibertyCityPlates", 0x10 | MB_TOPMOST);
@@ -67,6 +68,9 @@ bool CConfig::create() {
 	//else
 	//	fprintf(f, "PopupHeadlights 0\n");
 	fprintf(f, "TankComponents 1\n");
+	fprintf(f, "ImportExportData 0\n");
+	fprintf(f, "UseFastRandom 0\n");
+	fprintf(f, "PlateLight 1\n");
 
 
 	fclose(f);
@@ -90,6 +94,7 @@ bool CConfig::create() {
 #define TANK_COMPONENTS 0xED7A5294
 #define IMPORT_EXPORT_DATA 0x36E59D82
 #define USE_FAST_RANDOM 0xB7F568BC
+#define PLATE_LIGHT 0xC2A3B491
 
 int getInt(std::fstream& f) {
 	std::string tmpstr;
@@ -184,6 +189,9 @@ void CConfig::read() {
 				break;
 			case USE_FAST_RANDOM:
 				ms_bUseFastRandom = getInt(f);
+				break;
+			case PLATE_LIGHT:
+				ms_bPlateLight = getInt(f);
 				break;
 
 			}
