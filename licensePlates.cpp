@@ -610,17 +610,10 @@ struct VehicleTailLightsHook : CVehicle {
 	static size_t ms_processTailLights;
 
 	bool processTailLights(int a2, int a3, int a4, char a5, char a6, char a7, float a8, float a9, int a10, float* a11, char a12) {
-		auto ret = ((bool (__thiscall*)(CVehicle *, int, int, int, char, char, char, float, float, int, float*, char))(ms_processTailLights))(
+		auto ret = ((bool(__thiscall*)(CVehicle*, int, int, int, char, char, char, float, float, int, float*, char))(ms_processTailLights))(
 			this, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
 
-		bool b1 = *g_pdwGameTimer < g_pfnGetUnkTimer(this) && (*g_pdwGameTimer & 0x100) != 0;
-		bool b2 = (g_pfnGetVehicleFlags2_1(this) & 2) != 0 || b1;
-		if ((g_pfnGetVehicleFlags1_1(this) & 1) != 0)
-			b2 = true;
-		if ((g_pfnGetForceCarLightMask(this) & 3) == 2 || b2)
-			b1 = true;
-		else
-			b1 = false;
+		bool b1 = (g_pfnGetVehicleFlags1_1(this) & 1) != 0;
 
 		if (b1) {
 
@@ -636,7 +629,7 @@ struct VehicleTailLightsHook : CVehicle {
 
 					Vector3 vecColor = { 1.f, 1.f, 1.f };
 
-					float f1 = 20.f;
+					float f1 = 10.f;
 					int i2 = 0;
 					float f3 = 0.25;
 					float f4 = 90.f;
