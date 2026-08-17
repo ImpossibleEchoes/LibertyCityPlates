@@ -629,7 +629,7 @@ struct VehicleTailLightsHook : CVehicle {
 
 					Vector3 vecColor = { 1.f, 1.f, 1.f };
 
-					float f1 = 20.f;
+					float f1 = 10.f;
 					int i2 = 0;
 					float f3 = 0.25;
 					float f4 = 90.f;
