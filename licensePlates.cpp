@@ -627,13 +627,17 @@ struct VehicleTailLightsHook : CVehicle {
 					auto index = pStruct->m_aBones[i];
 					Matrix34* pGlobalMtx = ((Matrix34 * (__thiscall*)(CVehicle*, int))g_CDynamicEntity__getGlobalMtx)(this, index);
 
-					Vector3 vecColor = { 1.f, 1.f, 1.f };
+					Vector3 vecColor = {
+						CConfig::ms_fPlateLightColorRed,
+						CConfig::ms_fPlateLightColorGreen,
+						CConfig::ms_fPlateLightColorBlue
+					};
 
-					float f1 = 10.f;
+					float f1 = CConfig::ms_fPlateLightIntensity;
 					int i2 = 0;
-					float f3 = 0.25;
-					float f4 = 90.f;
-					float f5 = 90.f;
+					float f3 = CConfig::ms_fPlateLightRadius;
+					float f4 = CConfig::ms_fPlateLightInnerConeAngle;
+					float f5 = CConfig::ms_fPlateLightOuterConeAngle;
 					int i6 = 0;
 					uint32_t i7 = g_pfnGetEntityInteriorHandle(this);
 					uint8_t i8 = g_pfnGetEntityInteriorPortal(this);

@@ -18,6 +18,14 @@ public:
 	static bool ms_bUseFastRandom;
 	static bool ms_bPlateLight;
 
+	static float ms_fPlateLightColorRed;
+	static float ms_fPlateLightColorGreen;
+	static float ms_fPlateLightColorBlue;
+	static float ms_fPlateLightIntensity;
+	static float ms_fPlateLightRadius;
+	static float ms_fPlateLightInnerConeAngle;
+	static float ms_fPlateLightOuterConeAngle;
+
 	static bool ms_bTrue;
 
 	static void read();
