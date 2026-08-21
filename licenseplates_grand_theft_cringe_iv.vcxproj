@@ -198,7 +198,6 @@
     <ClCompile Include="rage_math.cpp" />
     <ClCompile Include="reloader.cpp" />
     <ClCompile Include="tankComponents.cpp" />
-    <ClCompile Include="testZone.cpp" />
     <ClCompile Include="trace.cpp" />
     <ClCompile Include="transmission.cpp" />
     <ClCompile Include="utils.cpp" />
