@@ -13,6 +13,7 @@
 
 #include <map>
 #include <vector>
+#include <cmath>
 
 struct grcTexture;
 
@@ -355,6 +356,7 @@ void __cdecl CPlateFactory::updateLicensePlates(CCustomShaderEffectVehicleFX*, C
 	if (pVars->m_nLicensePlateValuesIndex > 0) {
 		pVars->m_aLicensePlateValues[0] = 12 - pPlateInfo->m_NumChars;
 		pVars->m_aLicensePlateValues[1] = pPlateInfo->m_NumChars;
+		pVars->m_aLicensePlateValues[2] = CConfig::ms_fPlateBumpiness;
 	}
 
 	if (pVars->m_nLettersTintIndex > 0) {
@@ -625,15 +627,39 @@ struct VehicleTailLightsHook : CVehicle {
 
 				if (pStruct->m_aBones[i] != -1) {
 					auto index = pStruct->m_aBones[i];
-					Matrix34* pGlobalMtx = ((Matrix34 * (__thiscall*)(CVehicle*, int))g_CDynamicEntity__getGlobalMtx)(this, index);
+					Matrix34* pGlobalMtx =
+						((Matrix34 * (__thiscall*)(CVehicle*, int))
+							g_CDynamicEntity__getGlobalMtx)(this, index);
 
-					Vector3 vecColor = { 1.f, 1.f, 1.f };
+					Vector3 vecColor = {
+						CConfig::ms_fPlateLightColorRed,
+						CConfig::ms_fPlateLightColorGreen,
+						CConfig::ms_fPlateLightColorBlue
+					};
 
-					float f1 = 10.f;
+					Vector3 lightDirection = pGlobalMtx->c;
+					Vector3 lightTangent = pGlobalMtx->b;
+
+					float pitch = -CConfig::ms_fPlateLightPitch * (RAGE_PI / 180.0f);
+					float pitchSin = std::sin(pitch);
+					float pitchCos = std::cos(pitch);
+
+					Vector3 originalDirection = lightDirection;
+					Vector3 originalTangent = lightTangent;
+
+					lightDirection.x = originalDirection.x * pitchCos + originalTangent.x * pitchSin;
+					lightDirection.y = originalDirection.y * pitchCos + originalTangent.y * pitchSin;
+					lightDirection.z = originalDirection.z * pitchCos + originalTangent.z * pitchSin;
+
+					lightTangent.x = originalTangent.x * pitchCos - originalDirection.x * pitchSin;
+					lightTangent.y = originalTangent.y * pitchCos - originalDirection.y * pitchSin;
+					lightTangent.z = originalTangent.z * pitchCos - originalDirection.z * pitchSin;
+
+					float f1 = CConfig::ms_fPlateLightIntensity;
 					int i2 = 0;
-					float f3 = 0.25;
-					float f4 = 90.f;
-					float f5 = 90.f;
+					float f3 = CConfig::ms_fPlateLightRadius;
+					float f4 = CConfig::ms_fPlateLightInnerConeAngle;
+					float f5 = CConfig::ms_fPlateLightOuterConeAngle;
 					int i6 = 0;
 					uint32_t i7 = g_pfnGetEntityInteriorHandle(this);
 					uint8_t i8 = g_pfnGetEntityInteriorPortal(this);
@@ -641,7 +667,32 @@ struct VehicleTailLightsHook : CVehicle {
 					int i10 = 2;
 					int i11 = 0;
 
-					CLights__addSceneLight(i11, i10, i9, &pGlobalMtx->c.x, &pGlobalMtx->b.x, &pGlobalMtx->d.x, &vecColor.x, f1, i2, *g_CLights__m_pDefaultTxdID, f3, f4, f5, i7, i8, i6);
+					Vector3 lightPosition = pGlobalMtx->d;
+
+					Matrix34* pVehicleMtx = getTransform();
+
+					float heightOffset = CConfig::ms_fPlateLightHeightOffset;
+
+					lightPosition.x += pVehicleMtx->c.x * heightOffset;
+					lightPosition.y += pVehicleMtx->c.y * heightOffset;
+					lightPosition.z += pVehicleMtx->c.z * heightOffset;
+
+					CLights__addSceneLight(
+						i11, i10, i9,
+						&lightDirection.x,
+						&lightTangent.x,
+						&lightPosition.x,
+						&vecColor.x,
+						f1,
+						i2,
+						*g_CLights__m_pDefaultTxdID,
+						f3,
+						f4,
+						f5,
+						i7,
+						i8,
+						i6
+					);
 				}
 			}
 		}

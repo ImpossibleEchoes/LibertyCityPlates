@@ -28,6 +28,17 @@ bool CConfig::ms_bImportExportData = false;
 bool CConfig::ms_bUseFastRandom = false;
 bool CConfig::ms_bPlateLight = false;
 
+float CConfig::ms_fPlateLightColorRed = 1.0f;
+float CConfig::ms_fPlateLightColorGreen = 1.0f;
+float CConfig::ms_fPlateLightColorBlue = 1.0f;
+float CConfig::ms_fPlateLightIntensity = 20.0f;
+float CConfig::ms_fPlateLightRadius = 0.25f;
+float CConfig::ms_fPlateLightInnerConeAngle = 90.0f;
+float CConfig::ms_fPlateLightOuterConeAngle = 90.0f;
+float CConfig::ms_fPlateLightPitch = 0.0f;
+float CConfig::ms_fPlateLightHeightOffset = 0.0f;
+float CConfig::ms_fPlateBumpiness = 5.0f;
+
 void showError(const char* pszText) {
 	MessageBoxA(nullptr, pszText, "LibertyCityPlates", 0x10 | MB_TOPMOST);
 }
@@ -71,7 +82,18 @@ bool CConfig::create() {
 	fprintf(f, "ImportExportData 0\n");
 	fprintf(f, "UseFastRandom 0\n");
 	fprintf(f, "PlateLight 1\n");
-
+	fprintf(f, "PlateLightSettings {\n");
+	fprintf(f, "\tColorRed 1.00\n");
+	fprintf(f, "\tColorGreen 1.00\n");
+	fprintf(f, "\tColorBlue 1.00\n");
+	fprintf(f, "\tIntensity 20.00\n");
+	fprintf(f, "\tRadius 0.25\n");
+	fprintf(f, "\tInnerConeAngle 90.00\n");
+	fprintf(f, "\tOuterConeAngle 90.00\n");
+	fprintf(f, "\tPitch 0.00\n");
+	fprintf(f, "\tHeightOffset 0.00\n");
+	fprintf(f, "}\n");
+	fprintf(f, "PlateBumpiness 5.00\n");
 
 	fclose(f);
 	//showInfo("config created!");
@@ -95,6 +117,17 @@ bool CConfig::create() {
 #define IMPORT_EXPORT_DATA 0x36E59D82
 #define USE_FAST_RANDOM 0xB7F568BC
 #define PLATE_LIGHT 0xC2A3B491
+#define PLATE_LIGHT_SETTINGS_HASH 0xD03593B8
+#define COLOR_RED_HASH 0x9F37D54F
+#define COLOR_GREEN_HASH 0x1E7F9A71
+#define COLOR_BLUE_HASH 0x8BA08810
+#define INTENSITY_HASH 0xEFCD993D
+#define RADIUS_HASH 0x4FBB9CF3
+#define INNER_CONE_ANGLE_HASH 0xCE123CF2
+#define OUTER_CONE_ANGLE_HASH 0x832BD195
+#define PITCH_HASH 0x3F4BB8CC
+#define HEIGHT_OFFSET_HASH 0x9B4A7D68
+#define PLATE_BUMPINESS_HASH 0x956364EB
 
 int getInt(std::fstream& f) {
 	std::string tmpstr;
@@ -111,10 +144,10 @@ void CConfig::read() {
 	std::fstream f(CONFIG_NAME);
 
 	if (!f.is_open()) {
-		create();
+		if (create())
+			read();
 		return;
 	}
-
 
 	bool bError = false;
 
@@ -193,7 +226,60 @@ void CConfig::read() {
 			case PLATE_LIGHT:
 				ms_bPlateLight = getInt(f);
 				break;
+			case PLATE_LIGHT_SETTINGS_HASH: {
+				f >> tmpstr;
+				if (tmpstr == "{") {
+					while (true) {
+						f >> tmpstr;
+						if (tmpstr == "}")
+							break;
 
+						hash = jenkins_one_at_a_time_hash(tmpstr.c_str());
+
+						switch (hash) {
+						case COLOR_RED_HASH:
+							ms_fPlateLightColorRed = getFloat(f);
+							break;
+
+						case COLOR_GREEN_HASH:
+							ms_fPlateLightColorGreen = getFloat(f);
+							break;
+
+						case COLOR_BLUE_HASH:
+							ms_fPlateLightColorBlue = getFloat(f);
+							break;
+
+						case INTENSITY_HASH:
+							ms_fPlateLightIntensity = getFloat(f);
+							break;
+
+						case RADIUS_HASH:
+							ms_fPlateLightRadius = getFloat(f);
+							break;
+
+						case INNER_CONE_ANGLE_HASH:
+							ms_fPlateLightInnerConeAngle = getFloat(f);
+							break;
+
+						case OUTER_CONE_ANGLE_HASH:
+							ms_fPlateLightOuterConeAngle = getFloat(f);
+							break;
+
+						case PITCH_HASH:
+							ms_fPlateLightPitch = getFloat(f);
+							break;
+
+						case HEIGHT_OFFSET_HASH:
+							ms_fPlateLightHeightOffset = getFloat(f);
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case PLATE_BUMPINESS_HASH:
+				ms_fPlateBumpiness = getFloat(f);
+				break;
 			}
 		}
 	}
