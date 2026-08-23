@@ -25,6 +25,8 @@ public:
 	static float ms_fPlateLightRadius;
 	static float ms_fPlateLightInnerConeAngle;
 	static float ms_fPlateLightOuterConeAngle;
+	static float ms_fPlateLightPitch;
+	static float ms_fPlateLightHeightOffset;
 
 	static bool ms_bTrue;
 

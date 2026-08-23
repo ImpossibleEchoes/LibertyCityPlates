@@ -35,6 +35,8 @@ float CConfig::ms_fPlateLightIntensity = 20.0f;
 float CConfig::ms_fPlateLightRadius = 0.25f;
 float CConfig::ms_fPlateLightInnerConeAngle = 90.0f;
 float CConfig::ms_fPlateLightOuterConeAngle = 90.0f;
+float CConfig::ms_fPlateLightPitch = 0.0f;
+float CConfig::ms_fPlateLightHeightOffset = 0.0f;
 
 void showError(const char* pszText) {
 	MessageBoxA(nullptr, pszText, "LibertyCityPlates", 0x10 | MB_TOPMOST);
@@ -87,6 +89,8 @@ bool CConfig::create() {
 	fprintf(f, "\tRadius 0.25\n");
 	fprintf(f, "\tInnerConeAngle 90.00\n");
 	fprintf(f, "\tOuterConeAngle 90.00\n");
+	fprintf(f, "\tPitch 0.00\n");
+	fprintf(f, "\tHeightOffset 0.00\n");
 	fprintf(f, "}\n");
 
 	fclose(f);
@@ -119,6 +123,8 @@ bool CConfig::create() {
 #define RADIUS_HASH 0x4FBB9CF3
 #define INNER_CONE_ANGLE_HASH 0xCE123CF2
 #define OUTER_CONE_ANGLE_HASH 0x832BD195
+#define PITCH_HASH 0x3F4BB8CC
+#define HEIGHT_OFFSET_HASH 0x9B4A7D68
 
 int getInt(std::fstream& f) {
 	std::string tmpstr;
@@ -135,10 +141,10 @@ void CConfig::read() {
 	std::fstream f(CONFIG_NAME);
 
 	if (!f.is_open()) {
-		create();
+		if (create())
+			read();
 		return;
 	}
-
 
 	bool bError = false;
 
@@ -254,6 +260,14 @@ void CConfig::read() {
 
 						case OUTER_CONE_ANGLE_HASH:
 							ms_fPlateLightOuterConeAngle = getFloat(f);
+							break;
+
+						case PITCH_HASH:
+							ms_fPlateLightPitch = getFloat(f);
+							break;
+
+						case HEIGHT_OFFSET_HASH:
+							ms_fPlateLightHeightOffset = getFloat(f);
 							break;
 						}
 					}
