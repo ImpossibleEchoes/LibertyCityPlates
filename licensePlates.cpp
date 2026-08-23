@@ -356,6 +356,7 @@ void __cdecl CPlateFactory::updateLicensePlates(CCustomShaderEffectVehicleFX*, C
 	if (pVars->m_nLicensePlateValuesIndex > 0) {
 		pVars->m_aLicensePlateValues[0] = 12 - pPlateInfo->m_NumChars;
 		pVars->m_aLicensePlateValues[1] = pPlateInfo->m_NumChars;
+		pVars->m_aLicensePlateValues[2] = CConfig::ms_fPlateBumpiness;
 	}
 
 	if (pVars->m_nLettersTintIndex > 0) {

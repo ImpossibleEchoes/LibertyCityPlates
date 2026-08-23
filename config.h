@@ -28,6 +28,8 @@ public:
 	static float ms_fPlateLightPitch;
 	static float ms_fPlateLightHeightOffset;
 
+	static float ms_fPlateBumpiness;
+
 	static bool ms_bTrue;
 
 	static void read();
